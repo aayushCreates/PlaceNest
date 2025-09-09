@@ -1,0 +1,137 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Application_Status {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum Branch {
+  CS
+  CY
+  IT
+  ME
+  ECE
+  EIC
+  EE
+  CE
+}
+
+enum JobStatus {
+  ACTIVE
+  CLOSED
+  DRAFT
+}
+
+enum JobType {
+  Internship
+  PartTime
+  FullTime
+  Contract
+}
+
+enum Role {
+  STUDENT
+  COORDINATOR
+  COMPANY
+}
+
+enum Year {
+  FIRST
+  SECOND
+  THIRD
+  FOURTH
+}
+
+enum Application_Mode {
+  OFFLINE
+  ONLINE
+}
+
+model User {
+  id    String    @id   @default(uuid())
+  firstName   String
+  lastName    String?
+  email   String    @unique
+  phone   String    @unique
+  password    String
+  branch    Branch?
+  year    Year?
+  cgpa    Decimal?   @db.Decimal(3,2)
+  active_backlog    Boolean?
+  backlogs    Int?
+  isVerified    Boolean    @default(false)
+  resumeUrl   String?
+  profileCompleted    Boolean    @default(false)
+
+  role    Role
+
+  application   Application[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([branch, year])
+}
+
+model Company {
+  id    String   @id   @default(uuid())
+  name    String
+  type    String
+  description   String?
+
+
+  jobs    Job[]
+
+  createdAt   DateTime    @default(now())
+  updateAt    DateTime    @updatedAt
+}
+
+model Job {
+  id    String   @id   @default(uuid())
+  type    JobType
+  title   String
+  description   String
+  role    String
+  location    String
+  package   String
+  cgpa_cutoff   Decimal   @db.Decimal(3,2)
+  deadline    DateTime
+  status    JobStatus    @default(ACTIVE)  
+
+  companyId   String   
+  company   Company   @relation(fields: [companyId], references: [id]) 
+
+  application   Application[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([deadline])
+}
+
+model Application {
+  id    String   @id   @default(uuid())
+  status    Application_Status   @default(PENDING)
+
+  mode    Application_Mode 
+
+  jobId   String
+  job   Job   @relation(fields: [jobId], references: [id])
+
+  userId    String
+  user    User   @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([jobId, userId])
+}
