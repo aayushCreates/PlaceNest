@@ -7,7 +7,10 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
     try{
         const user = req.user;
         if(!user){
-            return next(new AppError("user doesn't exists, please register", 400));
+            return res.status(400).json({
+                success: false,
+                message: "User doesn't exists, Please register."
+            })
         }
 
         res.status(200).json({
@@ -28,7 +31,7 @@ export const addProfile = async (req: Request, res: Response, next: NextFunction
     try{
         const user = req.user;
         if(!user){
-            res.status(200).json({
+            return res.status(400).json({
                 success: false,
                 message: "User doesn't exists, Please register."
             })
@@ -63,7 +66,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
     try{
         const user = req.user;
         if(!user){
-            res.status(200).json({
+            return res.status(400).json({
                 success: false,
                 message: "User doesn't exists, Please register."
             })
@@ -107,6 +110,12 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
 export const deleteProfile = async (req: Request, res: Response, next: NextFunction)=> {
     try{
         const user = req.user;
+        if(!user){
+            return res.status(400).json({
+                success: false,
+                message: "User doesn't exists, Please register."
+            })
+        }
 
         const deletedUser = await prisma.user.delete({
             where: {
