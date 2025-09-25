@@ -11,15 +11,25 @@ if(!jwtSecret){
 
 export const isUserLoggedIn = async (req: Request, res: Response, next: NextFunction)=> {
     try{
-        const token = req.cookies.token;
-        
-        const isValidToken = jwt.verify(token, jwtSecret) as JwtPayload;
+        const token = req.headers.authorization;
+        if(!token){
+            return res
+        .status(401)
+        .json({ message: "Authentication token not found" });
+        }
 
-        if(!isValidToken){
+        const tokenParts = token.split(" ");
+        if(tokenParts.length != 2 || tokenParts[0] !== "Bearer"){
+            return res.status(401).json({ message: "Invalid token format" });
+        } 
+        const actualToken = tokenParts[1];
+        const decoded = jwt.verify(actualToken, jwtSecret) as JwtPayload;
+
+        if(!decoded){
             return next(new AppError("Invalid token, please login again", 400));
         }
 
-        const userId = isValidToken.id;
+        const userId = decoded.id;
 
         const user = await prisma.user.findUnique({
             where: { id: userId }

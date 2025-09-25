@@ -104,7 +104,7 @@ model Job {
   role    String
   location    String
   package   String
-  cgpa_cutoff   Decimal   @db.Decimal(3,2)
+  cgpaCutOff   Decimal   @db.Decimal(3,2)
   deadline    DateTime
   status    JobStatus    @default(ACTIVE)  
 
