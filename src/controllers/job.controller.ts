@@ -132,15 +132,22 @@ export const postJob =  async (req: Request, res: Response, next: NextFunction)=
 
 export const updateJob =  async (req: Request, res: Response, next: NextFunction)=> {
     try {
-        const company = req.user;
-        if(!company){
+        const user = req.user;
+        if(!user){
             return res.status(400).json({
                 success: false,
                 message: "Company doesn't exists, Please register"
             })
         }
 
-        const jobId = req.params.id;
+        if(user.role !== 'COMPANY'){
+            return res.status(401).json({
+                success: true,
+                message: "Unauthenticated user."
+            })
+        }
+
+        const jobId = req.params?.id;
         if(!jobId){
             return res.status(400).json({
                 success: false,
@@ -153,7 +160,7 @@ export const updateJob =  async (req: Request, res: Response, next: NextFunction
                 id: jobId
             }
         })
-        if(job){
+        if(!job){
             return res.status(400).json({
                 success: false,
                 message: "Job is not exists"
@@ -175,13 +182,13 @@ export const updateJob =  async (req: Request, res: Response, next: NextFunction
         }
 
         const updatedJob = await prisma.Job.update({
-            where: { email: email },
+            where: { companyId: user.id  },
             updatedJobData
         })
 
         res.status(200).json({
             success: true,
-            message: "Jobs updated successfully"
+            message: "Jobs updated successfully",
             job: updatedJob
         })
 
@@ -194,9 +201,6 @@ export const updateJob =  async (req: Request, res: Response, next: NextFunction
         })
     }
 }
-
-
-
 
 
 

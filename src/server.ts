@@ -5,6 +5,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { errorMiddleware } from './middlewares/error.middleware'
 import authRouter from './routes/auth.routes';
+import profileRouter from './routes/profile.routes';
+import jobRouter from './routes/job.routes';
 
 
 const app = express();
@@ -17,8 +19,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 
-app.use('/auth/register', authRouter);
-// app.use('/profile');
+app.use('/auth', authRouter);
+app.use('/profile', profileRouter);
+app.use('/job', jobRouter);
 
 app.use('/ping', (req: Request, res: Response, next: NextFunction)=> {
     res.send("hello world");

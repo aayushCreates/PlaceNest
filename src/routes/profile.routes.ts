@@ -10,5 +10,6 @@ profileRouter.post('/', isUserLoggedIn , addProfile);
 profileRouter.put('/', isUserLoggedIn , updateProfile);
 profileRouter.delete('/', isUserLoggedIn , deleteProfile);
 
+profileRouter
 
 export default profileRouter;
