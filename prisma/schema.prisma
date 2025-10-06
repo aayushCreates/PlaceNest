@@ -8,6 +8,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/* ===========================
+   ENUMS
+   =========================== */
+
 enum ApplicationStatus {
   PENDING
   ACCEPTED
@@ -42,6 +46,7 @@ enum Role {
   STUDENT
   COORDINATOR
   COMPANY
+  ADMIN
 }
 
 enum Year {
@@ -56,72 +61,74 @@ enum ApplicationMode {
   ONLINE
 }
 
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/* ===========================
+   MODELS
+   =========================== */
+
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  phone    String @unique
-  password String
-  role     Role
+  id        String @id @default(uuid())
+  name      String
+  email     String @unique
+  phone     String @unique
+  password  String
+  role      Role
+
+  // Common verification
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedProfile Boolean               @default(false)
+
+  // Relations
+  verifications Verification[] // all verifications of this user (the one being verified)
+  coordinatorVerifications Verification[] @relation("CoordinatorVerification") // verifications done by this user (if coordinator/admin)
+
+  // Student-specific
+  branch          Branch?
+  year            Year?
+  cgpa            Decimal?   @db.Decimal(3, 2)
+  activeBacklog   Boolean?
+  backlogs        Int?
+  resumeUrl       String?
+  resumeScore     Int?
+  aiFeedback      String?
+  lastAnalyzedAt  DateTime?
+
+  applications    Application[]
+
+  // Company-specific
+  industry    String?
+  description String?
+  website     String?
+  founded     String?
+  location    String?
+  jobs        Job[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Company {
-  id          String @id @default(uuid())
-  name        String
-  email       String
-  industry    String
-  description String
-  website     String
-  founded     String
-  linkedin    String
-  location    String
+model Verification {
+  id            String @id @default(uuid())
+  userId        String             // student/company being verified
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verifiedById  String             // coordinator/admin who verified
+  verifiedBy    User   @relation("CoordinatorVerification", fields: [verifiedById], references: [id], onDelete: Cascade)
+  status        VerificationStatus @default(PENDING)
+  remarks       String?
+  createdAt     DateTime @default(now())
 
-  jobs Job[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([name, industry, email])
+  @@index([userId, verifiedById])
 }
 
-model Student {
-  id               String        @id @default(uuid())
-  name             String
-  email            String        @unique
-  phone            String        @unique
-  branch           Branch?
-  year             Year?
-  cgpa             Decimal?      @db.Decimal(3, 2)
-  activeBacklog    Boolean?
-  backlogs         Int?
-  isVerified       Boolean       @default(false)
-  resumeUrl        String?
-  profileCompleted Boolean       @default(false)
-  application      Application[]
 
-  @@index([branch, year, phone, email])
-}
-
-model Coordinator {
-  id               String   @id @default(uuid())
-  name             String
-  email            String   @unique
-  phone            String   @unique
-  password         String
-  branch           Branch?
-  year             Year?
-  cgpa             Decimal? @db.Decimal(3, 2)
-  activeBacklog    Boolean?
-  backlogs         Int?
-  isVerified       Boolean  @default(false)
-  resumeUrl        String?
-  profileCompleted Boolean  @default(false)
-
-  @@index([branch, year, phone, email])
-}
+/* ===========================
+   JOB MODEL
+   =========================== */
 
 model Job {
   id          String    @id @default(uuid())
@@ -136,24 +143,30 @@ model Job {
   status      JobStatus @default(ACTIVE)
 
   companyId String
-  company   Company @relation(fields: [companyId], references: [id])
+  company   User @relation(fields: [companyId], references: [id])
 
-  application Application[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  applications Application[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([status, deadline, companyId])
 }
 
+/* ===========================
+   APPLICATION MODEL
+   =========================== */
+
 model Application {
-  id     String            @id @default(uuid())
-  status ApplicationStatus @default(PENDING)
-  mode   ApplicationMode
+  id        String            @id @default(uuid())
+  status    ApplicationStatus @default(PENDING)
+  mode      ApplicationMode
+  remarks   String?
 
   jobId     String
   job       Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
   studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student   User    @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
