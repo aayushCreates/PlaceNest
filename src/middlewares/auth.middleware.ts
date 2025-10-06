@@ -2,7 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import AppError from '../utils/error.utils';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import bcrypt from "bcryptjs";
-import { prisma } from "../config/prisma";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const jwtSecret = process.env.JWT_SECRET as string;
 if(!jwtSecret){
@@ -55,7 +57,7 @@ export const getJWT = async (userId: string, userRole: string)=> {
 }
 
 
-export const checkValidUserByPassword = async (password, hashedPassword)=> {
+export const checkValidUserByPassword = async (password: string, hashedPassword: string)=> {
         const isValidPassword = await bcrypt.compare(password, hashedPassword);
 
         return isValidPassword;

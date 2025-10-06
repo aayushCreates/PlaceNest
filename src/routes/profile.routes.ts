@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteProfile, getProfile, updateProfile } from "../controllers/profile.controller";
+import { getProfile, updateProfile } from "../controllers/profile.controller";
 import { isUserLoggedIn } from "../middlewares/auth.middleware";
 
 

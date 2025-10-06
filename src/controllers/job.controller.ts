@@ -1,5 +1,4 @@
-import { NextFunction } from "express";
-import AppError from "../utils/error.utils";
+import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import { describe } from "node:test";
 
@@ -29,8 +28,8 @@ export const getAllJobs = async (req: Request, res: Response, next: NextFunction
 
         res.status(200).json({
             success: true,
-            message: "Jobs send successfully"
-            jobs: jobs
+            message: "Jobs send successfully",
+            data: jobs
         })
 
     }catch(err){
@@ -76,8 +75,8 @@ export const getJob = async (req: Request, res: Response, next: NextFunction)=> 
 
         res.status(200).json({
             success: true,
-            message: "Jobs send successfully"
-            job: jobDetails
+            message: "Jobs send successfully",
+            data: jobDetails
         })
 
     }catch(err){   
@@ -101,9 +100,9 @@ export const postJob =  async (req: Request, res: Response, next: NextFunction)=
             })
         }
 
-        const { type, title, description, role, location, package, cgpaCutOff, deadline, status } = req.body;
+        const { type, title, description, role, location, salary, cgpaCutOff, deadline, status } = req.body;
 
-        if(!type || !title || !description || !role || !location || !package || !cgpaCutOff || !deadline || !status){
+        if(!type || !title || !description || !role || !location || !salary || !cgpaCutOff || !deadline || !status){
             return res.status(400).json({
                 success: false,
                 message: "Enter the required fields"
@@ -111,13 +110,13 @@ export const postJob =  async (req: Request, res: Response, next: NextFunction)=
         }
 
         const newJob = await prisma.Job.create({
-            type, title, description, role, location, package, cgpaCutOff, deadline, status, companyId: company.id
+            type, title, description, role, location, salary, cgpaCutOff, deadline, status, companyId: company.id
         })
 
         res.status(200).json({
             success: true,
-            message: "Jobs send successfully"
-            job: newJob
+            message: "Jobs send successfully",
+            data: newJob
         })
 
     }catch(err){   
@@ -167,7 +166,7 @@ export const updateJob =  async (req: Request, res: Response, next: NextFunction
             })
         }
 
-        const { type, title, description, role, location, package, cgpaCutOff, deadline, status } = req.body;
+        const { type, title, description, role, location, salary, cgpaCutOff, deadline, status } = req.body;
 
         const updatedJobData = {
             type: type ? type : job.type,
@@ -175,7 +174,7 @@ export const updateJob =  async (req: Request, res: Response, next: NextFunction
             description: description ? describe : job.description, 
             role: role ? role : job.role, 
             location: location ? location : job.location, 
-            package: package ? package : job.package, 
+            salary: salary ? salary : job.salary, 
             cgpaCutOff: cgpaCutOff ? cgpaCutOff : job.cgpaCutOff, 
             deadline: deadline ? deadline : job.deadline, 
             status: status ? status : job.status

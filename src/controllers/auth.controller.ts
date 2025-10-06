@@ -1,14 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import AppError from "../utils/error.utils";
-import { prisma } from "../config/prisma";
 import { checkValidUserByPassword, getJWT } from "../middlewares/auth.middleware";
 import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client";
 
 const cookieOptions = {
   maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
 };
+
+const prisma = new PrismaClient();
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {

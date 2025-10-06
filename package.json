@@ -18,13 +18,13 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
+  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/creativeArchitect/PlaceNest/issues"
   },
   "homepage": "https://github.com/creativeArchitect/PlaceNest#readme",
   "dependencies": {
-    "@prisma/client": "^6.15.0",
+    "@prisma/client": "^6.16.3",
     "@types/cookie-parser": "^1.4.9",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
