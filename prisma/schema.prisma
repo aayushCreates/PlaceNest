@@ -58,11 +58,6 @@ enum Year {
   FOURTH
 }
 
-enum ApplicationMode {
-  OFFLINE
-  ONLINE
-}
-
 enum VerificationStatus {
   PENDING
   APPROVED
@@ -82,7 +77,7 @@ model User {
   phone       String @unique
   password    String
   role        Role
-  linkedinUrl String 
+  linkedinUrl String
 
   // Common verification
   verificationStatus VerificationStatus @default(PENDING)
@@ -171,7 +166,6 @@ model Job {
 model Application {
   id      String            @id @default(uuid())
   status  ApplicationStatus @default(PENDING)
-  mode    ApplicationMode
   remarks String?
 
   jobId String

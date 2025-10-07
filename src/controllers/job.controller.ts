@@ -1,579 +1,567 @@
+import { JobStatus } from "@/generated/prisma";
 import { PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 
 const prisma = new PrismaClient();
 
-export const getAllJobs = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
-
-        const jobs = await prisma.job.findMany({
-            where: {
-                status: "ACTIVE"
-            }
-        })
-        if(jobs.length === 0){
-            return res.status(200).json({
-                success: true,
-                message: "No jobs are found"
-            })
-        }
-        
-        res.status(200).json({
-            success: true,
-            message: "Jobs are fetched successfully",
-            data: jobs
-        })
-
-    }catch (err){
-        console.log("Error in getting jobs" + err);
-        res.status(500).json({
-            success: false,
-            message: "Error in getting Jobs"
-        })
+export const getAllJobs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User doesn't exists",
+      });
     }
-}
-export const getJob = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
 
-        const jobId = req.params.id;
-        if(!jobId){
-            return res.status(400).json({
-                success: false,
-                message: "Job id doesn't exists"
-            })
-        }
-
-        const job = await prisma.job.findFirst({
-            where: {
-                id: jobId
-            }
-        })
-        if(!job){
-            return res.status(400).json({
-                success: false,
-                message: "Job doesn't exists"
-            })
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Job fetched successfully",
-            data: job
-        })
-
-    }catch (err){
-        console.log("Error in getting job" + err);
-        res.status(500).json({
-            success: false,
-            message: "Error in getting Job"
-        })
+    const jobs = await prisma.job.findMany({
+      where: { status: "ACTIVE" },
+      include: {
+        company: {
+          select: { id: true, name: true, industry: true, website: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    if (jobs.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No active jobs are found",
+      });
     }
-}
-export const updateJob = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
 
-        if(user.role !== "COMPANY"){
-            return res.status(401).json({
-                success: false,
-                message: "Insufficient privileges"
-            })
-        }
+    res.status(200).json({
+      success: true,
+      message: "Jobs fetched successfully",
+      data: jobs,
+    });
+  } catch (err) {
+    console.log("Error in getting all active jobs" + err);
+    res.status(500).json({
+      success: false,
+      message: "Error in getting all active Jobs",
+    });
+  }
+};
+export const getJob = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User doesn't exists",
+      });
+    }
 
-        const jobId = req.params.id;
-        if(!jobId){
-            return res.status(400).json({
-                success: false,
-                message: "Job id doesn't exists"
-            })
-        }
+    const jobId = req.params.id;
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job id doesn't exists",
+      });
+    }
 
-        const job = await prisma.job.findFirst({
-            where: {
-                id: jobId
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        company: {
+          select: { id: true, name: true, industry: true, website: true },
+        },
+      },
+    });
+
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Job fetched successfully",
+      data: job,
+    });
+  } catch (err) {
+    console.log("Error in getting job" + err);
+    res.status(500).json({
+      success: false,
+      message: "Error in getting Job",
+    });
+  }
+};
+export const createJob = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User doesn't exists",
+      });
+    }
+
+    if (user.role !== "COMPANY") {
+      return res.status(401).json({
+        success: false,
+        message: "Insufficient privileges",
+      });
+    }
+
+    const {
+      type,
+      title,
+      description,
+      position,
+      location,
+      salary,
+      cgpaCutOff,
+      branchCutOff,
+      yearCutOff,
+      deadline,
+    } = req.body;
+
+    if (
+      !type ||
+      !title ||
+      !description ||
+      !position ||
+      !location ||
+      !salary ||
+      !cgpaCutOff ||
+      !deadline
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "All required fields must be provided",
+        });
+    }
+
+    const newJob = await prisma.job.create({
+      data: {
+        type,
+        title,
+        description,
+        position,
+        location,
+        salary,
+        cgpaCutOff,
+        branchCutOff,
+        yearCutOff,
+        deadline: new Date(deadline),
+        status: JobStatus.ACTIVE,
+        companyId: user.id,
+      },
+    });
+
+    res.status(200).json({
+      success: false,
+      message: "Job created successfully",
+      data: newJob,
+    });
+  } catch (err) {
+    console.log("Error in creation of new job" + err);
+    res.status(500).json({
+      success: false,
+      message: "Error in creation of new Job",
+    });
+  }
+};
+export const updateJob = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User doesn't exists",
+      });
+    }
+
+    if (user.role !== "COMPANY") {
+      return res.status(401).json({
+        success: false,
+        message: "Insufficient privileges",
+      });
+    }
+
+    const jobId = req.params.id;
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job id doesn't exists",
+      });
+    }
+
+    const job = await prisma.job.findFirst({
+      where: {
+        id: jobId,
+      },
+    });
+    if (!job) {
+      return res.status(400).json({
+        success: false,
+        message: "Job doesn't exists",
+      });
+    }
+
+    const {
+      type,
+      title,
+      description,
+      position,
+      location,
+      salary,
+      cgpaCutOff,
+      branchCutOff,
+      yearCutOff,
+      deadline,
+      status,
+    } = req.body;
+
+    const updatedContent = {
+      type: type ? type : job.type,
+      title: title ? title : job.title,
+      description: description ? description : job.description,
+      position: position ? position : job.position,
+      location: location ? location : job.location,
+      salary: salary ? salary : job.salary,
+      cgpaCutOff: cgpaCutOff ? cgpaCutOff : job.cgpaCutOff,
+      branchCutOff: branchCutOff ? branchCutOff : job.branchCutOff,
+      yearCutOff: yearCutOff ? yearCutOff : job.yearCutOff,
+      deadline: deadline ? deadline : job.deadline,
+      status: status ? status : job.status,
+    };
+
+    const updatedJob = await prisma.job.update({
+      where: {
+        id: job.id,
+      },
+      data: updatedContent,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Job updated successfully",
+      data: updatedJob,
+    });
+  } catch (err) {
+    console.log("Error in updating job" + err);
+    res.status(500).json({
+      success: false,
+      message: "Error in updating Job",
+    });
+  }
+};
+export const removeJob = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    const jobId = req.params.id;
+
+    if (!user || user.role !== "COMPANY") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only companies can close jobs" });
+    }
+
+    const job = await prisma.job.findUnique({
+      where: {
+        id: jobId,
+      },
+    });
+    if (!job)
+      return res.status(404).json({ success: false, message: "Job not found" });
+
+    const removedJob = await prisma.job.update({
+      where: {
+        id: jobId,
+      },
+      data: {
+        status: JobStatus.CLOSED,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Job removed successfully",
+      data: removedJob,
+    });
+  } catch (err) {
+    console.log("Error occurs during removing job", err);
+    res.status(500).json({
+      success: false,
+      message: "Error occurs during removing job",
+    });
+  }
+};
+
+export const applyJob = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    const jobId = req.params.id;
+
+    if (!user || user.role !== "STUDENT") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only students can apply" });
+    }
+  
+    const job = await prisma.job.findUnique({
+      where: {
+        id: jobId,
+      },
+    });
+    if (!job) {
+      return res.status(400).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    // Eligibility checks
+    const branchAllowed = job.branchCutOff.includes(user.branch!);
+    const yearAllowed = job.yearCutOff.includes(user.year!);
+    const cgpaAllowed =
+      user.cgpa && Number(user.cgpa) >= Number(job.cgpaCutOff);
+
+    if (!branchAllowed || !yearAllowed || !cgpaAllowed) {
+      return res
+        .status(400)
+        .json({ success: false, message: "You are not eligible for this job" });
+    }
+
+    const studentId = user.id;
+    //  checking if application exits
+    const isApplicationExists = await prisma.application.findUnique({
+        where: {
+            jobId_studentId: {
+                jobId,
+                studentId
             }
-        })
-        if(!job){
-            return res.status(400).json({
-                success: false,
-                message: "Job doesn't exists"
-            })
         }
+    })
+    if(isApplicationExists){
+        return res
+        .status(400)
+        .json({ success: false, message: "Already applied for this job" });
+    }
 
-        const { type, title, description, position, location, salary, cgpaCutOff, branchCutOff, yearCutOff, deadline, status } = req.body;
+    const newApplication = await prisma.application.create({
+      data: {
+        jobId: job.id,
+        studentId: user.id
+      }
+    });
 
-        const updatedContent = {
-            type: type ? type : job.type,
-            title: title ? title : job.title,
-            description: description ? description : job.description,
-            position: position ? position : job.position,
-            location: location ? location : job.location,
-            salary: salary ? salary : job.salary,
-            cgpaCutOff: cgpaCutOff ? cgpaCutOff : job.cgpaCutOff,
-            branchCutOff: branchCutOff ? branchCutOff : job.branchCutOff,
-            yearCutOff: yearCutOff ? yearCutOff : job.yearCutOff,
-            deadline: deadline ? deadline : job.deadline,
-            status: status ? status : job.status
-        }
+    return res.status(200).json({
+      success: true,
+      message: "Application created successfully",
+      data: newApplication,
+    });
+  } catch (err) {
+    console.error("Error applying for job:", err);
+    res.status(500).json({ success: false, message: "Error applying for job" });
+  }
+};
+export const jobApplication = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    const applicationId = req.params.id;
 
-        const updatedJob = await prisma.job.update({
-            where: {
-                id: job.id
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const application = await prisma.application.findFirst({
+      where: {
+        id: applicationId,
+      },
+      include: {
+        job: {
+          include: {
+            type: true,
+            title: true,
+            position: true,
+            location: true,
+            salary: true,
+            cgpaCutOff: true,
+            branchCutOff: true,
+            yearCutOff: true,
+            deadline: true,
+            status: true,
+            company: {
+              select: {
+                id: true,
+                name: true,
+                website: true,
+              },
             },
-            updatedContent
-        })
-
-        res.status(200).json({
-            success: true,
-            message: "Job updated successfully",
-            data: updatedJob
-        })
-
-    }catch (err){
-        console.log("Error in updating job" + err);
-        res.status(500).json({
-            success: false,
-            message: "Error in updating Job"
-        })
+          },
+        },
+        student: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            branch: true,
+            year: true,
+            cgpa: true,
+            resumeUrl: true,
+            linkedinUrl: true,
+            activeBacklog: true,
+            backlogs: true,
+          },
+        },
+      },
+    });
+    if (!application) {
+      return res.status(400).json({
+        success: false,
+        message: "Application not found",
+      });
     }
-}
-export const createJob = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
 
-        if(user.role !== "COMPANY"){
-            return res.status(401).json({
-                success: false,
-                message: "Insufficient privileges"
-            })
-        }
+    res.status(200).json({
+      success: true,
+      message: "Application fetched successfully",
+      data: application,
+    });
+  } catch (err) {
+    console.log("Error in fetching job");
+    res.status(500).json({
+      success: false,
+      message: "Error in fetching job",
+    });
+  }
+};
 
-        const { type, title, description, position, location, salary, cgpaCutOff, branchCutOff, yearCutOff, deadline, status, companyId } = req.body;
+export const updateApplicationStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    const jobId = req.params.id;
+    const { studentId, status } = req.body;
 
-        const newJob = await prisma.job.create({
-            type, title, description, position, location, salary, cgpaCutOff, branchCutOff, yearCutOff, deadline, status, companyId
-        })
-        res.status(200).json({
-                success: false,
-                message: "Job created successfully",
-                data: newJob
-            })
-    }catch (err){
-        console.log("Error in creation of job" + err);
-        res.status(500).json({
-            success: false,
-            message: "Error in creation of Job"
-        })
+    if (!user || user.role !== "COMPANY") {
+        return res.status(403).json({ success: false, message: "Only companies can update status" });
+      }
+
+    const jobDetails = await prisma.job.findFirst({
+      where: {
+        id: jobId,
+      },
+    });
+    if (!jobDetails) {
+      return res.status(404).json({
+        success: true,
+        message: "Job not found",
+      });
     }
-}
-export const removeJob = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
 
-        const jobId = req.params.id;
-        if(!jobId) { 
-            return res.status(400).json({
-                success: false,
-                message: "Job id doesn't exists"
-            })
+    const studentApplication = await prisma.application.findUnique({
+      where: {
+        jobId_studentId: {
+            jobId,
+            studentId
         }
+      },
+    });
+    if (!studentApplication) {
+        return res.status(404).json({ success: false, message: "Application not found" });
+      }
 
-        const job = await prisma.job.findFirst({
-            where: {
-                id: jobId
-            }
-        })
-        if(!job) { 
-            return res.status(400).json({
-                success: false,
-                message: "Job doesn't exists"
-            })
-        }
+    const updateStudentApplication = await prisma.application.update({
+      where: {
+        id: studentApplication.id,
+      },
+      data: {
+        status: status,
+      },
+    });
 
-        const updatedJob = await prisma.job.update({
-            where: {
-                id: jobId
+    res.status(200).json({
+      success: true,
+      message: "Application status updated successfully",
+      data: updateStudentApplication,
+    });
+  } catch (err) {
+    console.log("Error updating status" + err);
+    res.status(500).json({ success: false, message: "Error updating status" });
+  }
+};
+
+export const shortlistedStudents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    const jobId = req.params.id;
+
+    if (!user || user.role !== "COMPANY") {
+        return res.status(403).json({ success: false, message: "Only companies can view shortlisted students" });
+      }
+
+      const totalShortlistedApplications = await prisma.application.findMany({
+        where: { jobId: jobId, status: "ACCEPTED" },
+        include: {
+          student: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              branch: true,
+              year: true,
+              cgpa: true,
+              resumeUrl: true,
+              linkedinUrl: true,
             },
-            status: "CLOSED"
-        })
-
-        res.status(200).json({
-            success: true,
-            message: "Job closed successfully",
-            data: updatedJob
-        })
-
-    }catch(err) {
-        console.log("Error occurs during closing job", err);
-        res.status(500).json({
-            success: false,
-            message: "Error occurs during closing job",
-        })
+          },
+        },
+      });
+    if (totalShortlistedApplications.length === 0) {
+        return res.status(200).json({ success: true, message: "No shortlisted students yet", data: [] });
     }
-}
 
-
-export const applyJob = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
-
-        const jobId = req.params.id;
-        if(!jobId) { 
-            return res.status(400).json({
-                success: false,
-                message: "job id doesn't exists"
-            })
-        }
-
-        const job = await prisma.job.findFirst({
-            where: {
-                id: jobId
-            }
-        })
-        if(!job) { 
-            return res.status(400).json({
-                success: false,
-                message: "job doesn't exists"
-            })
-        }
-
-        const { studentId, mode } = req.body;
-        if(!studentId || !mode){
-            return res.status(400).json({
-                success: false,
-                message: "StudentId and mode of job doesn't exists"
-            })
-        }
-
-        const studentDetails = await prisma.student.findFirst({
-            where: {
-                id: studentId
-            }
-        })
-        if(!studentDetails){
-            return res.status(400).json({
-                success: false,
-                message: "Student doesn't exists"
-            })
-        }
-
-        const isStudentBranchAllowed = job.branchCutOff.length > 0 && job.branchCutOff.includes(studentDetails.branch);
-
-        const isStudentYearAllowed = job.yearCutOff.length > 0 && job.yearCutOff.includes(studentDetails.year);
-
-        if(studentDetails.cgpa >= job.cgpaCutOff && isStudentBranchAllowed && isStudentYearAllowed){
-            const applicationDetails = {
-                jobId: job.id,
-                studentId: studentId,
-                mode: mode
-            }
-    
-            const createdApplication = await prisma.application.create({
-                applicationDetails
-            })
-    
-            return res.status(200).json({
-                success: true,
-                message: "Application created successfully",
-                data: createdApplication
-            })
-        }
-
-        return res.status(400).json({
-            success: false,
-            message: "You are not eligible for this job profile",
-        })
-
-    }catch(err) {
-        console.log("Error occurs during apply job");
-        res.status(500).json({
-            success: false,
-            message: "Error is happening in applying job",
-        })
-    }
-}
-export const jobApplication = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
-
-        const applicationId = req.params.id;
-        if(!applicationId) { 
-            return res.status(400).json({
-                success: false,
-                message: "application id doesn't exits"
-            })
-        }
-
-        const application = await prisma.application.findFirst({
-            where: {
-                id: applicationId
-            },
-            include: {
-                job: {
-                    select: {
-                        type: true,
-                        title: true,
-                        position: true,
-                        location: true,
-                        salary: true,
-                        cgpaCutOff: true,
-                        branchCutOff: true,
-                        yearCutOff: true,
-                        deadline: true,
-                        status: true,
-                        company: {
-                            select: {
-                                name: true,
-                                website: true
-                            }
-                        }
-                    }
-                },
-                student: {
-                    select: {
-                        name: true,
-                        email: true,
-                        phone: true,
-                        branch: true,
-                        year: true,
-                        cgpa: true,
-                        resumeUrl: true,
-                        linkedinUrl: true,
-                        activeBacklog: true,
-                        backlogs: true
-                    }
-                }
-            }
-        })
-        if(!application) { 
-            return res.status(400).json({
-                success: false,
-                message: "application doesn't exits"
-            })
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Application got successfully",
-            data: application
-        })
-
-    }catch(err) {
-        console.log("Error occurs during apply job");
-        res.status(500).json({
-            success: false,
-            message: "Error is happening in applying job",
-        })
-    }
-}
-
-export const updateApplicationStatus = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(404).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
-
-        if(user.role !== "COMPANY"){
-            return res.status(401).json({
-                success: false,
-                message: "Insufficient privileges"
-            })
-        }
-
-        const jobId = req.params.id;
-        if(!jobId) { 
-            return res.status(404).json({
-                success: false,
-                message: "job id doesn't exits"
-            })
-        }
-
-        const jobDetails = await prisma.job.findFirst({
-            where: {
-                id: jobId
-            }
-        })
-        if(!jobDetails){
-            return res.status(404).json({
-                success: true,
-                message: "Job doesn't exists",
-            })
-        }
-
-        const { studentId, status } = req.body;
-
-        const studentApplication = await prisma.application.findUnique({
-            where: {
-                jobId: jobId,
-                studentId: studentId
-            }
-        })
-        if(!studentApplication){
-            return res.status(404).json({
-                success: true,
-                message: "No job application found for this student id"
-            })
-        }
-
-        const updateStudentApplication = await prisma.application.update({
-            where: {
-                id: studentApplication.id
-            },
-            data: {
-               status: status
-            }
-        })
-
-        res.status(200).json({
-            success: true,
-            message: "Shortlisted Candidates",
-            data: updateStudentApplication
-        })
-
-    }catch(err) {
-        console.log("Error occurs in student shortlist");
-        res.status(500).json({
-            success: false,
-            message: "Error occurs in student shortlist",
-        })
-    }
-}
-
-export const shortlistedStudents = async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-        const user = req.user;
-        if(!user){
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists"
-            })
-        }
-
-        if(user.role !== "COMPANY"){
-            return res.status(401).json({
-                success: false,
-                message: "Insufficient privileges"
-            })
-        }
-
-        const { jobId } = req.params;
-
-        const totalApplications = await prisma.application.findMany({
-            where: {
-                jobId: jobId
-            },
-            include: {
-                job: {
-                    select: {
-                        type: true,
-                        title: true,
-                        position: true,
-                        location: true,
-                        salary: true,
-                        cgpaCutOff: true,
-                        branchCutOff: true,
-                        yearCutOff: true,
-                        deadline: true,
-                        status: true,
-                        company: {
-                            select: {
-                                name: true,
-                                website: true
-                            }
-                        }
-                    }
-                },
-                student: {
-                    select: {
-                        name: true,
-                        email: true,
-                        phone: true,
-                        branch: true,
-                        year: true,
-                        cgpa: true,
-                        resumeUrl: true,
-                        linkedinUrl: true,
-                        activeBacklog: true,
-                        backlogs: true
-                    }
-                }
-            }
-        })
-        if(totalApplications.length === 0) { 
-            return res.status(400).json({
-                success: false,
-                message: `No application found for this JobId: ${jobId}`
-            })
-        }
-
-        const shortlistedStudentsData = totalApplications.filter(application=> application.status === "ACCEPTED");
-
-        if(shortlistedStudentsData.length === 0){
-            return res.status(400).json({
-                success: false,
-                message: `No shortlisted application found for this JobId: ${jobId}`
-            })
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Application got successfully",
-            data: shortlistedStudentsData
-        })
-
-    }catch(err) {
-        console.log("Error occuring finding shortlisted students");
-        res.status(500).json({
-            success: false,
-            message: "Error occuring finding shortlisted students",
-        })
-    }
-}
+    res.status(200).json({
+        success: true,
+        message: "Shortlisted students fetched successfully",
+        data: totalShortlistedApplications,
+      });
+  } catch (err) {
+    console.error("Error fetching shortlisted:", err);
+    res.status(500).json({ success: false, message: "Error fetching shortlisted students" });
+  }
+};

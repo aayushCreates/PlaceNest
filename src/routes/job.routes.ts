@@ -4,17 +4,22 @@ import { Router } from "express";
 
 const jobRouter = Router();
 
-jobRouter.get('/', isUserLoggedIn, getAllJobs);
-jobRouter.get('/:id', isUserLoggedIn, getJob);
-jobRouter.get('/:id', isUserLoggedIn, updateJob);
-jobRouter.get('/:id', isUserLoggedIn, createJob);
+// ----------- PUBLIC / COMPANY ROUTES -----------
+jobRouter.get("/", isUserLoggedIn, getAllJobs);
+jobRouter.get("/:id", isUserLoggedIn, getJob);
 
-jobRouter.get('/:id/apply', isUserLoggedIn, applyJob);
-jobRouter.get('/application/:id', isUserLoggedIn, jobApplication);
-jobRouter.get('/:id/close', isUserLoggedIn, removeJob);
-jobRouter.get('/:id/eligibility', isUserLoggedIn, updateApplicationStatus);
-jobRouter.get('/:id/shortlisted/students', isUserLoggedIn, shortlistedStudents);
+// ----------- COMPANY-SPECIFIC ROUTES -----------
+jobRouter.post("/", isUserLoggedIn, createJob);
+jobRouter.put("/:id", isUserLoggedIn, updateJob);
+jobRouter.patch("/:id/remove", isUserLoggedIn, removeJob);
 
-// jobRouter.get('/:id/application/:studentId/status', isUserLoggedIn, applicationStatus);
+// ----------- STUDENT-SPECIFIC ROUTES -----------
+jobRouter.post("/:id/apply", isUserLoggedIn, applyJob);
+jobRouter.get("/application/:id", isUserLoggedIn, jobApplication);
+
+// ----------- COMPANY REVIEW ROUTES -----------
+jobRouter.patch("/:id/application/status", isUserLoggedIn, updateApplicationStatus);
+jobRouter.get("/:id/shortlisted", isUserLoggedIn, shortlistedStudents);
+
 
 export default jobRouter;
