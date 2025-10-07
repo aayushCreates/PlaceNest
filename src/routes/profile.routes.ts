@@ -8,6 +8,6 @@ const profileRouter = Router();
 profileRouter.get('/', isUserLoggedIn , getProfile);
 profileRouter.put('/', isUserLoggedIn , updateProfile);
 
-profileRouter
+profileRouter.put('/:id', isUserLoggedIn, verifyProfile);
 
 export default profileRouter;
