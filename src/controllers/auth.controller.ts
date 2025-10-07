@@ -35,14 +35,20 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     } = req.body;
 
     if (!name || !email || !phone || !password || !role) {
-      return next(new AppError("Name, email, phone, password and role are required.", 400));
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, phone, password and role are required.",
+      });
     }
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
     if (existingUser) {
-      return next(new AppError("User already exists.", 409));
+      return res.status(409).json({
+        success: false,
+        message: "User already exists.",
+      });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -122,8 +128,11 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       token: token
     });
   } catch (err) {
-    console.error("Registration error:", err);
-    next(new AppError("Error during registration", 500));
+    console.error("Error during registration:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error during registration",
+    });
   }
 };
 
@@ -131,17 +140,26 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return next(new AppError("Please provide email and password", 400));
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and password",
+      });
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return next(new AppError("User not found. Please register.", 404));
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Please register.",
+      });
     }
 
     const isValidUser = await checkValidUserByPassword(password, user.password);
     if (!isValidUser) {
-      return next(new AppError("Invalid credentials", 401));
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
     }
 
     // Block login for unverified students/companies
@@ -149,12 +167,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       (user.role === "STUDENT" || user.role === "COMPANY") &&
       user.verificationStatus !== "APPROVED"
     ) {
-      return next(
-        new AppError(
-          "Your profile is under verification. Please wait for coordinator approval.",
-          403
-        )
-      );
+      return res.status(403).json({
+        success: false,
+        message: "Your profile is under verification. Please wait for coordinator approval.",
+      });
     }
 
     const token = getJWT(user.id, user.role);
@@ -174,7 +190,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     });
   } catch (err) {
     console.error("Login error:", err);
-    next(new AppError("Error during login", 500));
+    return res.status(500).json({
+      success: false,
+      message: "Error during login",
+    });
   }
 };
 
@@ -186,6 +205,10 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
       message: "Logged out successfully",
     });
   } catch (err) {
-    next(new AppError("Error during logout", 500));
+    console.log("Error in user logout" + err);
+    return res.status(500).json({
+      success: false,
+      message: "Error during logout",
+    });
   }
 };
