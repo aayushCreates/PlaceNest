@@ -76,12 +76,13 @@ enum VerificationStatus {
  */
 
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  phone    String @unique
-  password String
-  role     Role
+  id          String @id @default(uuid())
+  name        String
+  email       String @unique
+  phone       String @unique
+  password    String
+  role        Role
+  linkedinUrl String 
 
   // Common verification
   verificationStatus VerificationStatus @default(PENDING)
@@ -140,12 +141,16 @@ model Job {
   type        JobType
   title       String
   description String
-  role        String
+  position    String
   location    String
   salary      String
-  cgpaCutOff  Decimal   @db.Decimal(3, 2)
   deadline    DateTime
   status      JobStatus @default(ACTIVE)
+
+  //  eligibility
+  cgpaCutOff   Decimal  @db.Decimal(3, 2)
+  branchCutOff Branch[]
+  yearCutOff   Year[]
 
   companyId String
   company   User   @relation(fields: [companyId], references: [id])
