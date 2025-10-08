@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import AppError from "../utils/error.utils";
 import { checkValidUserByPassword, getJWT } from "../middlewares/auth.middleware";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";

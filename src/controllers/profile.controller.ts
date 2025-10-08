@@ -243,3 +243,207 @@ export const verifyProfile = async (req: Request, res: Response, next: NextFunct
     });
   }
 }
+
+export const getAllStudents = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    if (!user || user.role !== "COORDINATOR") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only coordinator can see all the students details" });
+    }
+
+    const students = await prisma.user.findMany({});
+    if(students.length <= 0){
+      return res
+      .status(404)
+      .json({ success: false, message: "Students data is not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Students data fetched successfully",
+      data: students
+    })
+
+  } catch(err){
+    console.error("Error in fetching all the students:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in fetching all the students",
+    });
+  }
+}
+
+export const getAllCompanies = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    if (!user || user.role !== "COORDINATOR") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only coordinator can see all the companies details" });
+    }
+
+    const companies = await prisma.user.findMany({});
+    if(companies.length <= 0){
+      return res
+      .status(404)
+      .json({ success: false, message: "companies data is not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "companies data fetched successfully",
+      data: companies
+    })
+
+  } catch(err){
+    console.error("Error in fetching all the companies:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in fetching all the companies",
+    });
+  }
+}
+
+export const getAllCoordinators = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    if (!user || user.role !== "COORDINATOR") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only coordinator can see all the companies details" });
+    }
+
+    const coordinators = await prisma.user.findMany({});
+    if(coordinators.length <= 0){
+      return res
+      .status(404)
+      .json({ success: false, message: "coordinators data is not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "coordinators data fetched successfully",
+      data: coordinators
+    })
+
+  } catch(err){
+    console.error("Error in fetching all the coordinators:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in fetching all the coordinators",
+    });
+  }
+}
+
+export const getUserProfile = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    const profileId = req.params.id;
+    if (!user || user.role !== "COORDINATOR" || user.role !== "COMPANY") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only coordinator and company can see all the companies details" });
+    }
+
+    const profile = await prisma.user.findUnique({
+      where: {
+        id: profileId
+      }
+    });
+    if(!profile){
+      return res
+      .status(404)
+      .json({ success: false, message: "companies data is not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "companies data fetched successfully",
+      data: profile
+    })
+
+  } catch(err){
+    console.error("Error in fetching all the companies:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in fetching all the companies",
+    });
+  }
+}
+
+export const promoteUserToCoordinator = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const loginUser = req.user;
+    const userId = req.params.id;
+    if (!loginUser || loginUser.role !== "COORDINATOR") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only coordinator can promote the user" });
+    }
+
+    const userExists = await prisma.user.findUnique({
+      where: {
+        id: userId
+      }
+    });
+    if(!userExists){
+      return res
+      .status(404)
+      .json({ success: false, message: "user is not found" });
+    }
+
+    const promotedUser = await prisma.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        role: "COORDINATOR"
+      }
+    })
+
+    res.status(200).json({
+      success: true,
+      message: "companies data fetched successfully",
+      data: promotedUser
+    })
+
+  } catch(err){
+    console.error("Error in promoting user:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in promoting user",
+    });
+  }
+}
+
+export const dasboard = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    if (!user || user.role !== "COORDINATOR") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only coordinator can promote the user" });
+    }
+
+    const totalVerifiedStudents = await prisma.user.findMany({
+      where: {
+        
+      }
+    })
+
+    res.status(200).json({
+      success: true,
+      message: "companies data fetched successfully",
+      data: promotedUser
+    })
+
+  } catch(err){
+    console.error("Error in promoting user:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in promoting user",
+    });
+  }
+}

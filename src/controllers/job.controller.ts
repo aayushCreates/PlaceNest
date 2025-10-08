@@ -565,3 +565,120 @@ export const shortlistedStudents = async (
     res.status(500).json({ success: false, message: "Error fetching shortlisted students" });
   }
 };
+
+export const getCompanyJobs = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    const companyId = req.params.id;
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found, please login" });
+    }
+
+    const company = await prisma.company.findUnique({
+      where: {
+        id: companyId
+      },
+      include: {
+        jobs: true
+      }
+    });
+    if(!company){
+      return res
+      .status(404)
+      .json({ success: false, message: "company is not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "company jobs data fetched successfully",
+      data: company.jobs
+    })
+
+  } catch(err){
+    console.error("Error in fetching all jobs of the company: ", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in fetching all jobs of the company",
+    });
+  }
+}
+
+export const getStudentApplications = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    const studentId = req.params.id;
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found, please login" });
+    }
+
+    const student = await prisma.company.findUnique({
+      where: {
+        id: studentId
+      },
+      include: {
+        applications: true
+      }
+    });
+    if(!student){
+      return res
+      .status(404)
+      .json({ success: false, message: "student applications is not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "company jobs data fetched successfully",
+      data: student.applications
+    })
+
+  } catch(err){
+    console.error("Error in fetching all applications of the student: ", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in fetching all applications of the student",
+    });
+  }
+}
+
+export const getAllJobApplications = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    const jobId = req.params.id;
+    if (!user || (user.role !== "COMPANY" && user.role !== "COORDINATOR")) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only companies and coordinators can get the job applications" });
+    }
+
+    const job = await prisma.job.findUnique({
+      where: {
+        id: jobId
+      },
+      include: {
+        applications: true
+      }
+    });
+    if(!job){
+      return res
+      .status(404)
+      .json({ success: false, message: "job is not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "company jobs data fetched successfully",
+      data: job.applications
+    })
+
+  } catch(err){
+    console.error("Error in fetching all applications of the job: ", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in fetching all applications of the job",
+    });
+  }
+}
