@@ -82,7 +82,6 @@ model User {
   // Common verification
   verificationStatus VerificationStatus @default(PENDING)
   verifiedProfile    Boolean            @default(false)
-  verifyById         String             @default("")
 
   // Relations
   verifications            Verification[]
@@ -117,8 +116,10 @@ model Verification {
   id           String             @id @default(uuid())
   userId       String // student/company being verified
   user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  verifiedById String // coordinator/admin who verified
-  verifiedBy   User               @relation("CoordinatorVerification", fields: [verifiedById], references: [id], onDelete: Cascade)
+
+  verifiedById String?
+  verifiedBy   User?               @relation("CoordinatorVerification", fields: [verifiedById], references: [id], onDelete: Cascade)
+
   status       VerificationStatus @default(PENDING)
   remarks      String?
   createdAt    DateTime           @default(now())

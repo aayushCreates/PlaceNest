@@ -213,7 +213,7 @@ export const verifyProfile = async (req: Request, res: Response, next: NextFunct
         verificationStatus:
           status === "APPROVED"
             ? VerificationStatus.APPROVED
-            : VerificationStatus.REJECTED,
+            : VerificationStatus.REJECTED
       }
     })
 
