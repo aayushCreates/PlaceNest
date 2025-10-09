@@ -7,6 +7,7 @@ import { errorMiddleware } from './middlewares/error.middleware'
 import authRouter from './routes/auth.routes';
 import profileRouter from './routes/profile.routes';
 import jobRouter from './routes/job.routes';
+import applicationRouter from './routes/application.routes';
 
 
 const app = express();
@@ -22,6 +23,8 @@ app.use(cookieParser());
 app.use('/auth', authRouter);
 app.use('/profile', profileRouter);
 app.use('/job', jobRouter);
+app.use('/application', applicationRouter);
+
 
 app.use('/ping', (req: Request, res: Response, next: NextFunction)=> {
     res.send("hello world");

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { checkValidUserByPassword, getJWT } from "../middlewares/auth.middleware";
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../generated/prisma";
 
 const cookieOptions = {
   maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
@@ -29,7 +29,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       website,
       foundedYear,
       location,
-      linkedin,
+      linkedinUrl,
       resumeUrl,
     } = req.body;
 
@@ -56,7 +56,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     let verificationStatus: "PENDING" | "APPROVED" = "PENDING";
     let verifiedProfile = false;
 
-    if (role === "COORDINATOR" || role === "ADMIN") {
+    if (role === "COORDINATOR") {
       verificationStatus = "APPROVED";
       verifiedProfile = true;
     }
@@ -68,7 +68,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       phone,
       password: passwordHash,
       role,
-      linkedin,
+      linkedinUrl,
       verificationStatus,
       verifiedProfile,
     };
@@ -100,19 +100,26 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       data: baseData,
     });
 
+    console.log("new user: ", newUser);
+
     // Automatically create verification log for students/companies
     if (role === "STUDENT" || role === "COMPANY") {
-      await prisma.verification.create({
+      const verificationEntry = await prisma.verification.create({
         data: {
           userId: newUser.id,
-          status: "PENDING",
+          status: verificationStatus,
           remarks: "Initial verification on registration",
+          verifiedById: "",
         },
       });
+
+      console.log("verification entry: ", verificationEntry);
     }
 
     const token = getJWT(newUser.id, newUser.role);
     res.cookie("token", token, cookieOptions);
+
+    console.log("token: ", token);
 
     res.status(201).json({
       success: true,

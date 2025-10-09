@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import AppError from "../utils/error.utils";
-import { PrismaClient } from "@prisma/client";
-import { VerificationStatus } from "@/generated/prisma";
+import { PrismaClient } from "../generated/prisma";
+import { JobStatus, Role, VerificationStatus } from "@/generated/prisma";
 
 const prisma = new PrismaClient();
 
@@ -429,7 +429,21 @@ export const dasboard = async (req: Request, res: Response, next: NextFunction)=
 
     const totalVerifiedStudents = await prisma.user.findMany({
       where: {
-        
+        verifyProfile: true,
+        role: Role.STUDENT
+      }
+    })
+
+    const totalVerifiedCompanies = await prisma.user.findMany({
+      where: {
+        verifyProfile: true,
+        role: Role.COMPANY
+      }
+    })
+
+    const activeJobs = await prisma.job.findMany({
+      where: {
+        status: JobStatus.ACTIVE
       }
     })
 

@@ -82,10 +82,11 @@ model User {
   // Common verification
   verificationStatus VerificationStatus @default(PENDING)
   verifiedProfile    Boolean            @default(false)
+  verifyById         String             @default("")
 
   // Relations
-  verifications            Verification[] // all verifications of this user (the one being verified)
-  coordinatorVerifications Verification[] @relation("CoordinatorVerification") // verifications done by this user (if coordinator/admin)
+  verifications            Verification[]
+  coordinatorVerifications Verification[] @relation("CoordinatorVerification")
 
   // Student-specific
   branch         Branch?
