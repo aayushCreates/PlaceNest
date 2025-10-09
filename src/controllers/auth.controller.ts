@@ -40,13 +40,28 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       });
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { phone },
+        ],
+      },
     });
     if (existingUser) {
+      let conflictField = '';
+    
+      if (existingUser.email === email && existingUser.phone === phone) {
+        conflictField = 'Email and phone number are already in use.';
+      } else if (existingUser.email === email) {
+        conflictField = 'Email is already in use.';
+      } else if (existingUser.phone === phone) {
+        conflictField = 'Phone number is already in use.';
+      }
+    
       return res.status(409).json({
         success: false,
-        message: "User already exists.",
+        message: conflictField || 'User already exists.',
       });
     }
 
@@ -109,14 +124,13 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
           userId: newUser.id,
           status: verificationStatus,
           remarks: "Initial verification on registration",
-          verifiedById: "",
         },
       });
 
       console.log("verification entry: ", verificationEntry);
     }
 
-    const token = getJWT(newUser.id, newUser.role);
+    const token = await getJWT(newUser.id, newUser.role);
     res.cookie("token", token, cookieOptions);
 
     console.log("token: ", token);
