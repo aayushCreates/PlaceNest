@@ -31,12 +31,11 @@ export const isUserLoggedIn = async (req: Request, res: Response, next: NextFunc
             return next(new AppError("Invalid token, please login again", 400));
         }
 
-        const userId = decoded.id;
+        const userId = decoded.userId;
 
         const user = await prisma.user.findUnique({
             where: { id: userId }
         })
-
         req.user = user;
 
         next();

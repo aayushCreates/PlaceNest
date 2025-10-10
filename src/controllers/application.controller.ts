@@ -85,31 +85,31 @@ export const jobApplication = async (
   export const getStudentApplications = async (req: Request, res: Response, next: NextFunction)=> {
     try {
       const user = req.user;
-      const studentId = req.params.id;
       if (!user) {
         return res
           .status(404)
           .json({ success: false, message: "User not found, please login" });
       }
   
-      const student = await prisma.company.findUnique({
+      const studentApplications = await prisma.application.findMany({
         where: {
-          id: studentId
+          id: user.id
         },
         include: {
-          applications: true
+          job: true
         }
       });
-      if(!student){
+      console.log("student applications: ", studentApplications);
+      if(studentApplications.length === 0){
         return res
-        .status(404)
-        .json({ success: false, message: "student applications is not found" });
+        .status(200)
+        .json({ success: false, message: "student applications is not found", data: studentApplications });
       }
   
       res.status(200).json({
         success: true,
         message: "company jobs data fetched successfully",
-        data: student.applications
+        data: studentApplications
       })
   
     } catch(err){

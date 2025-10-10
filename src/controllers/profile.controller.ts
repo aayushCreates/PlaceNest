@@ -75,6 +75,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         resumeUrl,
         linkedinUrl,
         location,
+        description
       } = req.body;
 
       updatedData = {
@@ -89,6 +90,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         resumeUrl: resumeUrl ?? user.resumeUrl,
         linkedinUrl: linkedinUrl ?? user.linkedinUrl,
         location: location ?? user.location,
+        description: description ?? user.description,
         verificationStatus: VerificationStatus.PENDING,
         verifiedProfile: false,
       };
@@ -108,6 +110,8 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         founded,
         location,
       } = req.body;
+      
+      console.log("req.body: ", req.body);
 
       updatedData = {
         name: name ?? user.name,
@@ -147,7 +151,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
 
     // Create verification record for coordinator 
     if (resetVerification) {
-      await prisma.verification.create({
+      const removeVerify = await prisma.verification.create({
         data: {
           userId: updatedUser.id,
           status: "PENDING",
@@ -170,6 +174,47 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+export const verficationProfiles = async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const user = req.user;
+    console.log("user:", user);
+
+    if (!user || user.role !== "COORDINATOR") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only coordinator can verify profile" });
+    }
+
+    const profiles = await prisma.user.findMany({
+      where: {
+        verificationStatus: "PENDING",
+        NOT: {
+          role: "COORDINATOR"
+        }
+      }
+    })
+    console.log("profile Details: ", profiles);
+    if (!profiles) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Profiles are not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Profiles fetched successfully`,
+      data: profiles
+    })
+
+  } catch(err){
+    console.error("Error in verifying user profile:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in verifying user profile",
+    });
+  }
+}
+
 export const verifyProfile = async (req: Request, res: Response, next: NextFunction)=> {
   try {
     const user = req.user;
@@ -187,11 +232,14 @@ export const verifyProfile = async (req: Request, res: Response, next: NextFunct
       });
     }
 
+    console.log("profileId: ", req.params.id);
+
     const profileDetails = await prisma.user.findUnique({
       where: {
         id: profileId
       }
     })
+    console.log("profile Details: ", profileDetails);
     if (!profileDetails) {
       return res
         .status(404)
@@ -217,6 +265,8 @@ export const verifyProfile = async (req: Request, res: Response, next: NextFunct
       }
     })
 
+    console.log("update profile: ", updateProfile);
+
     const verificationEntry = await prisma.verification.create({
       data: {
         userId: profileId,
@@ -228,6 +278,8 @@ export const verifyProfile = async (req: Request, res: Response, next: NextFunct
         remarks: `Profile ${status.toLowerCase()} by ${user.name}`,
       },
     })
+
+    console.log("verifiation entry: ", verificationEntry);
 
     res.status(200).json({
       success: true,
@@ -350,6 +402,9 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
     const profile = await prisma.user.findUnique({
       where: {
         id: profileId
+      },
+      include: {
+        applications: true
       }
     });
     if(!profile){

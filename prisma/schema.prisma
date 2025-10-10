@@ -18,6 +18,7 @@ enum ApplicationStatus {
   PENDING
   ACCEPTED
   REJECTED
+  SHORTLISTED
 }
 
 enum Branch {
@@ -41,7 +42,7 @@ enum JobType {
   Internship
   PartTime
   FullTime
-  Contract
+  Contract  
 }
 
 enum Role {

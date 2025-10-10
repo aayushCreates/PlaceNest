@@ -115,8 +115,6 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       data: baseData,
     });
 
-    console.log("new user: ", newUser);
-
     // Automatically create verification log for students/companies
     if (role === "STUDENT" || role === "COMPANY") {
       const verificationEntry = await prisma.verification.create({
