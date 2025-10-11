@@ -61,7 +61,7 @@ enum Year {
 
 enum VerificationStatus {
   PENDING
-  APPROVED
+    
   REJECTED
 }
 

@@ -305,7 +305,12 @@ export const getAllStudents = async (req: Request, res: Response, next: NextFunc
         .json({ success: false, message: "Only coordinator can see all the students details" });
     }
 
-    const students = await prisma.user.findMany({});
+    const students = await prisma.user.findMany({
+      where: {
+        role: "STUDENT"
+      }
+    });
+    console.log("students: ", students);
     if(students.length <= 0){
       return res
       .status(404)
@@ -336,7 +341,11 @@ export const getAllCompanies = async (req: Request, res: Response, next: NextFun
         .json({ success: false, message: "Only coordinator can see all the companies details" });
     }
 
-    const companies = await prisma.user.findMany({});
+    const companies = await prisma.user.findMany({
+      where: {
+        role: "COMPANY"
+      }
+    });
     if(companies.length <= 0){
       return res
       .status(404)

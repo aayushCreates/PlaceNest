@@ -1,7 +1,6 @@
 import UserType from "./UserTypes";
-
-declare module "next" {
-  interface NextApiRequest {
+declare namespace Express {
+  export interface Request {
     user?: UserType;
   }
 }

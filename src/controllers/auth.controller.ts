@@ -181,15 +181,15 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     // Block login for unverified students/companies
-    if (
-      (user.role === "STUDENT" || user.role === "COMPANY") &&
-      user.verificationStatus !== "APPROVED"
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Your profile is under verification. Please wait for coordinator approval.",
-      });
-    }
+    // if (
+    //   (user.role === "STUDENT" || user.role === "COMPANY") &&
+    //   user.verificationStatus !== "APPROVED"
+    // ) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Your profile is under verification. Please wait for coordinator approval.",
+    //   });
+    // }
 
     const token = getJWT(user.id, user.role);
     res.cookie("token", token, cookieOptions);
