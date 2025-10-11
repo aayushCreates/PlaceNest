@@ -191,7 +191,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     //   });
     // }
 
-    const token = getJWT(user.id, user.role);
+    const token = await getJWT(user.id, user.role);
     res.cookie("token", token, cookieOptions);
 
     res.status(200).json({
