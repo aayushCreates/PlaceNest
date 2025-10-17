@@ -1,6 +1,7 @@
-import { JobStatus } from "@/generated/prisma";
+import { JobStatus, VerificationStatus } from "@/generated/prisma";
 import { PrismaClient } from "../generated/prisma";
 import { Request, Response, NextFunction } from "express";
+import verficationRoutes from "@/routes/verifiation.routes";
 
 const prisma = new PrismaClient();
 
@@ -10,6 +11,7 @@ export const getAllJobs = async (
   next: NextFunction
 ) => {
   try {
+    console.log("user: ", req.user);
     const user = req.user;
     if (!user) {
       return res.status(400).json({
@@ -19,14 +21,16 @@ export const getAllJobs = async (
     }
 
     const jobs = await prisma.job.findMany({
-      where: { status: "ACTIVE" },
+      where: {
+        status: "ACTIVE"
+      },
       include: {
         company: {
           select: { id: true, name: true, industry: true, website: true },
         },
       },
-      orderBy: { createdAt: "desc" },
     });
+    console.log("jobs: ", jobs);
     if (jobs.length === 0) {
       return res.status(200).json({
         success: true,
@@ -101,15 +105,15 @@ export const createJob = async (
   next: NextFunction
 ) => {
   try {
-    const user = req.user;
-    if (!user) {
+    const company = req.user;
+    if (!company) {
       return res.status(400).json({
         success: false,
-        message: "User doesn't exists",
+        message: "company doesn't exists",
       });
     }
 
-    if (user.role !== "COMPANY") {
+    if (company.role !== "COMPANY" || !company.verifiedProfile) {
       return res.status(401).json({
         success: false,
         message: "Insufficient privileges",
@@ -139,12 +143,10 @@ export const createJob = async (
       !cgpaCutOff ||
       !deadline
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "All required fields must be provided",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "All required fields must be provided",
+      });
     }
 
     const newJob = await prisma.job.create({
@@ -160,7 +162,7 @@ export const createJob = async (
         yearCutOff,
         deadline: new Date(deadline),
         status: JobStatus.ACTIVE,
-        companyId: user.id,
+        companyId: company.id,
       },
     });
 
@@ -191,7 +193,7 @@ export const updateJob = async (
       });
     }
 
-    if (user.role !== "COMPANY") {
+    if (user.role !== "COMPANY" || !user.verifiedProfile) {
       return res.status(401).json({
         success: false,
         message: "Insufficient privileges",
@@ -275,10 +277,10 @@ export const removeJob = async (
     const user = req.user;
     const jobId = req.params.id;
 
-    if (!user || user.role !== "COMPANY") {
+    if (!user || user.role !== "COMPANY" || !user.verifiedProfile) {
       return res
         .status(403)
-        .json({ success: false, message: "Only companies can close jobs" });
+        .json({ success: false, message: "Only verified companies can close jobs" });
     }
 
     const job = await prisma.job.findUnique({
@@ -321,12 +323,12 @@ export const applyJob = async (
     const user = req.user;
     const jobId = req.params.id;
 
-    if (!user || user.role !== "STUDENT") {
+    if (!user || user.role !== "STUDENT" || !user.verifiedProfile) {
       return res
         .status(403)
-        .json({ success: false, message: "Only students can apply" });
+        .json({ success: false, message: "Only verified students can apply" });
     }
-  
+
     const job = await prisma.job.findUnique({
       where: {
         id: jobId,
@@ -354,15 +356,15 @@ export const applyJob = async (
     const studentId = user.id;
     //  checking if application exits
     const isApplicationExists = await prisma.application.findUnique({
-        where: {
-            jobId_studentId: {
-                jobId,
-                studentId
-            }
-        }
-    })
-    if(isApplicationExists){
-        return res
+      where: {
+        jobId_studentId: {
+          jobId,
+          studentId,
+        },
+      },
+    });
+    if (isApplicationExists) {
+      return res
         .status(400)
         .json({ success: false, message: "Already applied for this job" });
     }
@@ -370,8 +372,8 @@ export const applyJob = async (
     const newApplication = await prisma.application.create({
       data: {
         jobId: job.id,
-        studentId: user.id
-      }
+        studentId: user.id,
+      },
     });
 
     return res.status(200).json({
@@ -395,76 +397,93 @@ export const shortlistedStudents = async (
     const jobId = req.params.id;
 
     if (!user || user.role !== "COMPANY") {
-        return res.status(403).json({ success: false, message: "Only companies can view shortlisted students" });
-      }
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Only companies can view shortlisted students",
+        });
+    }
 
-      const totalShortlistedApplications = await prisma.application.findMany({
-        where: { jobId: jobId, status: "ACCEPTED" },
-        include: {
-          student: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              branch: true,
-              year: true,
-              cgpa: true,
-              resumeUrl: true,
-              linkedinUrl: true,
-            },
+    const totalShortlistedApplications = await prisma.application.findMany({
+      where: { jobId: jobId, status: "ACCEPTED" },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            branch: true,
+            year: true,
+            cgpa: true,
+            resumeUrl: true,
+            linkedinUrl: true,
           },
         },
-      });
+      },
+    });
     if (totalShortlistedApplications.length === 0) {
-        return res.status(200).json({ success: true, message: "No shortlisted students yet", data: [] });
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "No shortlisted students yet",
+          data: [],
+        });
     }
 
     res.status(200).json({
-        success: true,
-        message: "Shortlisted students fetched successfully",
-        data: totalShortlistedApplications,
-      });
+      success: true,
+      message: "Shortlisted students fetched successfully",
+      data: totalShortlistedApplications,
+    });
   } catch (err) {
     console.error("Error fetching shortlisted:", err);
-    res.status(500).json({ success: false, message: "Error fetching shortlisted students" });
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching shortlisted students" });
   }
 };
 
-export const getCompanyJobs = async (req: Request, res: Response, next: NextFunction)=> {
+export const getCompanyJobs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const user = req.user;
-    const companyId = req.params.id;
+    const companyId = req.params.companyId;
     if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found, please login" });
     }
 
-    const company = await prisma.company.findUnique({
+    const company = await prisma.user.findUnique({
       where: {
-        id: companyId
+        id: companyId,
       },
       include: {
-        jobs: true
-      }
+        jobs: true,
+      },
     });
-    if(!company){
+
+    if (!company) {
       return res
-      .status(404)
-      .json({ success: false, message: "company is not found" });
+        .status(404)
+        .json({ success: false, message: "company is not found" });
     }
 
     res.status(200).json({
       success: true,
       message: "company jobs data fetched successfully",
-      data: company.jobs
-    })
-
-  } catch(err){
+      data: company.jobs,
+    });
+  } catch (err) {
     console.error("Error in fetching all jobs of the company: ", err);
     res.status(500).json({
       success: false,
       message: "Error in fetching all jobs of the company",
     });
   }
-}
+};

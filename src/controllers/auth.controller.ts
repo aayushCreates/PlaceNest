@@ -164,13 +164,22 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ 
+      where: { 
+        email 
+      },
+      include: {
+        applications: true
+      }
+     });
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found. Please register.",
       });
     }
+
+    console.log("user: ", user);
 
     const isValidUser = await checkValidUserByPassword(password, user.password);
     if (!isValidUser) {
@@ -203,6 +212,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         email: user.email,
         role: user.role,
         verificationStatus: user.verificationStatus,
+        totalApplications: user.applications.length
       },
       token: token
     });

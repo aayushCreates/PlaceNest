@@ -9,8 +9,8 @@ jobRouter.get("/:id", isUserLoggedIn, getJob);
 
 jobRouter.post("/", isUserLoggedIn, createJob);
 jobRouter.put("/:id", isUserLoggedIn, updateJob);
-jobRouter.patch("/:id/remove", isUserLoggedIn, removeJob);
-jobRouter.get("/job/company/:id", isUserLoggedIn, getCompanyJobs);
+jobRouter.delete("/:id/remove", isUserLoggedIn, removeJob);
+jobRouter.get("/company/:companyId", isUserLoggedIn, getCompanyJobs);
 
 jobRouter.post("/:id/apply", isUserLoggedIn, applyJob);
 

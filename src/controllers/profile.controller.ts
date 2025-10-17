@@ -49,7 +49,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const updateProfile = async (req: Request, res: Response, next: NextFunction)=> {
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user) {
@@ -110,7 +110,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         founded,
         location,
       } = req.body;
-      
+
       console.log("req.body: ", req.body);
 
       updatedData = {
@@ -174,129 +174,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-export const verficationProfiles = async (req: Request, res: Response, next: NextFunction)=> {
-  try {
-    const user = req.user;
-    console.log("user:", user);
-
-    if (!user || user.role !== "COORDINATOR") {
-      return res
-        .status(403)
-        .json({ success: false, message: "Only coordinator can verify profile" });
-    }
-
-    const profiles = await prisma.user.findMany({
-      where: {
-        verificationStatus: "PENDING",
-        NOT: {
-          role: "COORDINATOR"
-        }
-      }
-    })
-    console.log("profile Details: ", profiles);
-    if (!profiles) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Profiles are not found" });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: `Profiles fetched successfully`,
-      data: profiles
-    })
-
-  } catch(err){
-    console.error("Error in verifying user profile:", err);
-    res.status(500).json({
-      success: false,
-      message: "Error in verifying user profile",
-    });
-  }
-}
-
-export const verifyProfile = async (req: Request, res: Response, next: NextFunction)=> {
-  try {
-    const user = req.user;
-    const profileId = req.params.id;
-    const { status } = req.body;
-    if (!user || user.role !== "COORDINATOR") {
-      return res
-        .status(403)
-        .json({ success: false, message: "Only coordinator can verify profile" });
-    }
-    if (!["APPROVED", "REJECTED"].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid verification status. Must be APPROVED or REJECTED.",
-      });
-    }
-
-    console.log("profileId: ", req.params.id);
-
-    const profileDetails = await prisma.user.findUnique({
-      where: {
-        id: profileId
-      }
-    })
-    console.log("profile Details: ", profileDetails);
-    if (!profileDetails) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Profile not found" });
-    }
-    if (profileDetails.role === "COORDINATOR") {
-      return res.status(400).json({
-        success: false,
-        message: "Coordinator profiles cannot be verified.",
-      });
-    }
-
-    const updateProfile = await prisma.user.update({
-      where: {
-        id: profileId
-      },
-      data: {
-        verifiedProfile: status === "APPROVED",
-        verificationStatus:
-          status === "APPROVED"
-            ? VerificationStatus.APPROVED
-            : VerificationStatus.REJECTED
-      }
-    })
-
-    console.log("update profile: ", updateProfile);
-
-    const verificationEntry = await prisma.verification.create({
-      data: {
-        userId: profileId,
-        verifiedById: user.id,
-        status:
-          status === "APPROVED"
-            ? VerificationStatus.APPROVED
-            : VerificationStatus.REJECTED,
-        remarks: `Profile ${status.toLowerCase()} by ${user.name}`,
-      },
-    })
-
-    console.log("verifiation entry: ", verificationEntry);
-
-    res.status(200).json({
-      success: true,
-      message: `Profile ${status.toLowerCase()} successfully`,
-      data: updateProfile
-    })
-
-  } catch(err){
-    console.error("Error in verifying user profile:", err);
-    res.status(500).json({
-      success: false,
-      message: "Error in verifying user profile",
-    });
-  }
-}
-
-export const getAllStudents = async (req: Request, res: Response, next: NextFunction)=> {
+export const getAllStudents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user || user.role !== "COORDINATOR") {
@@ -311,10 +189,10 @@ export const getAllStudents = async (req: Request, res: Response, next: NextFunc
       }
     });
     console.log("students: ", students);
-    if(students.length <= 0){
+    if (students.length <= 0) {
       return res
-      .status(404)
-      .json({ success: false, message: "Students data is not found" });
+        .status(404)
+        .json({ success: false, message: "Students data is not found" });
     }
 
     res.status(200).json({
@@ -323,7 +201,7 @@ export const getAllStudents = async (req: Request, res: Response, next: NextFunc
       data: students
     })
 
-  } catch(err){
+  } catch (err) {
     console.error("Error in fetching all the students:", err);
     res.status(500).json({
       success: false,
@@ -332,7 +210,7 @@ export const getAllStudents = async (req: Request, res: Response, next: NextFunc
   }
 }
 
-export const getAllCompanies = async (req: Request, res: Response, next: NextFunction)=> {
+export const getAllCompanies = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user || user.role !== "COORDINATOR") {
@@ -346,10 +224,10 @@ export const getAllCompanies = async (req: Request, res: Response, next: NextFun
         role: "COMPANY"
       }
     });
-    if(companies.length <= 0){
+    if (companies.length <= 0) {
       return res
-      .status(404)
-      .json({ success: false, message: "companies data is not found" });
+        .status(404)
+        .json({ success: false, message: "companies data is not found" });
     }
 
     res.status(200).json({
@@ -358,7 +236,7 @@ export const getAllCompanies = async (req: Request, res: Response, next: NextFun
       data: companies
     })
 
-  } catch(err){
+  } catch (err) {
     console.error("Error in fetching all the companies:", err);
     res.status(500).json({
       success: false,
@@ -367,7 +245,7 @@ export const getAllCompanies = async (req: Request, res: Response, next: NextFun
   }
 }
 
-export const getAllCoordinators = async (req: Request, res: Response, next: NextFunction)=> {
+export const getAllCoordinators = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user || user.role !== "COORDINATOR") {
@@ -377,10 +255,10 @@ export const getAllCoordinators = async (req: Request, res: Response, next: Next
     }
 
     const coordinators = await prisma.user.findMany({});
-    if(coordinators.length <= 0){
+    if (coordinators.length <= 0) {
       return res
-      .status(404)
-      .json({ success: false, message: "coordinators data is not found" });
+        .status(404)
+        .json({ success: false, message: "coordinators data is not found" });
     }
 
     res.status(200).json({
@@ -389,7 +267,7 @@ export const getAllCoordinators = async (req: Request, res: Response, next: Next
       data: coordinators
     })
 
-  } catch(err){
+  } catch (err) {
     console.error("Error in fetching all the coordinators:", err);
     res.status(500).json({
       success: false,
@@ -398,14 +276,14 @@ export const getAllCoordinators = async (req: Request, res: Response, next: Next
   }
 }
 
-export const getUserProfile = async (req: Request, res: Response, next: NextFunction)=> {
+export const getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     const profileId = req.params.id;
-    if (!user || user.role !== "COORDINATOR" || user.role !== "COMPANY") {
+    if (!user || (user.role !== "COORDINATOR" && user.role !== "COMPANY")) {
       return res
         .status(403)
-        .json({ success: false, message: "Only coordinator and company can see all the companies details" });
+        .json({ success: false, message: "Only coordinator and company can see all the student profile details" });
     }
 
     const profile = await prisma.user.findUnique({
@@ -416,28 +294,28 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
         applications: true
       }
     });
-    if(!profile){
+    if (!profile) {
       return res
-      .status(404)
-      .json({ success: false, message: "companies data is not found" });
+        .status(404)
+        .json({ success: false, message: "user data is not found" });
     }
 
     res.status(200).json({
       success: true,
-      message: "companies data fetched successfully",
+      message: "user data fetched successfully",
       data: profile
     })
 
-  } catch(err){
-    console.error("Error in fetching all the companies:", err);
+  } catch (err) {
+    console.error("Error in fetching all the user:", err);
     res.status(500).json({
       success: false,
-      message: "Error in fetching all the companies",
+      message: "Error in fetching all the user",
     });
   }
 }
 
-export const promoteUserToCoordinator = async (req: Request, res: Response, next: NextFunction)=> {
+export const promoteUserToCoordinator = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const loginUser = req.user;
     const userId = req.params.id;
@@ -452,10 +330,10 @@ export const promoteUserToCoordinator = async (req: Request, res: Response, next
         id: userId
       }
     });
-    if(!userExists){
+    if (!userExists) {
       return res
-      .status(404)
-      .json({ success: false, message: "user is not found" });
+        .status(404)
+        .json({ success: false, message: "user is not found" });
     }
 
     const promotedUser = await prisma.user.update({
@@ -473,7 +351,7 @@ export const promoteUserToCoordinator = async (req: Request, res: Response, next
       data: promotedUser
     })
 
-  } catch(err){
+  } catch (err) {
     console.error("Error in promoting user:", err);
     res.status(500).json({
       success: false,
@@ -482,7 +360,7 @@ export const promoteUserToCoordinator = async (req: Request, res: Response, next
   }
 }
 
-export const dasboard = async (req: Request, res: Response, next: NextFunction)=> {
+export const dasboard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user || user.role !== "COORDINATOR") {
@@ -493,14 +371,14 @@ export const dasboard = async (req: Request, res: Response, next: NextFunction)=
 
     const totalVerifiedStudents = await prisma.user.findMany({
       where: {
-        verifyProfile: true,
+        verifiedProfile: true,
         role: Role.STUDENT
       }
     })
 
     const totalVerifiedCompanies = await prisma.user.findMany({
       where: {
-        verifyProfile: true,
+        verifiedProfile: true,
         role: Role.COMPANY
       }
     })
@@ -513,15 +391,22 @@ export const dasboard = async (req: Request, res: Response, next: NextFunction)=
 
     res.status(200).json({
       success: true,
-      message: "companies data fetched successfully",
-      data: promotedUser
+      message: "Dashboard data fetched successfully",
+      data: {
+        totalVerifiedStudents: totalVerifiedStudents.length,
+        totalVerifiedCompanies: totalVerifiedCompanies.length,
+        activeJobs: activeJobs.length,
+        verifiedStudents: totalVerifiedStudents,
+        verifiedCompanies: totalVerifiedCompanies,
+        jobs: activeJobs
+      }
     })
 
-  } catch(err){
-    console.error("Error in promoting user:", err);
+  } catch (err) {
+    console.error("Error in fetching dashboard data:", err);
     res.status(500).json({
       success: false,
-      message: "Error in promoting user",
+      message: "Error in fetching dashboard data",
     });
   }
 }

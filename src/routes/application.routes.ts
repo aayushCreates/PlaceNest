@@ -9,9 +9,9 @@ import { Router } from "express";
 
 const applicationRouter = Router();
 
-applicationRouter.get("/:id", isUserLoggedIn, jobApplication);
 applicationRouter.get("/", isUserLoggedIn, getStudentApplications);
+applicationRouter.get("/:id", isUserLoggedIn, jobApplication);
 applicationRouter.patch("/:id/status", isUserLoggedIn, updateApplicationStatus);
-applicationRouter.get("/job/:id", isUserLoggedIn, getAllJobApplications);
+applicationRouter.get("/job/:companyId", isUserLoggedIn, getAllJobApplications);
 
 export default applicationRouter;

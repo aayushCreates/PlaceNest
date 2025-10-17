@@ -8,6 +8,7 @@ import authRouter from './routes/auth.routes';
 import profileRouter from './routes/profile.routes';
 import jobRouter from './routes/job.routes';
 import applicationRouter from './routes/application.routes';
+import verficationRoutes from './routes/verifiation.routes';
 
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/auth', authRouter);
 app.use('/profile', profileRouter);
 app.use('/job', jobRouter);
 app.use('/application', applicationRouter);
+app.use('/verification', verficationRoutes);
 
 
 app.use('/ping', (req: Request, res: Response, next: NextFunction)=> {
