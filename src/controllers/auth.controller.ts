@@ -179,8 +179,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       });
     }
 
-    console.log("user: ", user);
-
     const isValidUser = await checkValidUserByPassword(password, user.password);
     if (!isValidUser) {
       return res.status(401).json({

@@ -11,7 +11,6 @@ export const getUsersForVerification = async (
 ) => {
   try {
     const user = req.user;
-    console.log("user:", user);
 
     if (!user || user.role !== "COORDINATOR") {
       return res.status(403).json({
@@ -56,7 +55,6 @@ export const verifyUser = async (
 ) => {
   try {
     const user = req.user;
-    console.log("user:", user);
 
     if (!user || user.role !== "COORDINATOR") {
       return res.status(403).json({

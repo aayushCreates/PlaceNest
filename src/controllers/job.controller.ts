@@ -1,7 +1,6 @@
 import { JobStatus, VerificationStatus } from "@/generated/prisma";
 import { PrismaClient } from "../generated/prisma";
 import { Request, Response, NextFunction } from "express";
-import verficationRoutes from "@/routes/verifiation.routes";
 
 const prisma = new PrismaClient();
 
@@ -11,7 +10,6 @@ export const getAllJobs = async (
   next: NextFunction
 ) => {
   try {
-    console.log("user: ", req.user);
     const user = req.user;
     if (!user) {
       return res.status(400).json({
@@ -30,7 +28,6 @@ export const getAllJobs = async (
         },
       },
     });
-    console.log("jobs: ", jobs);
     if (jobs.length === 0) {
       return res.status(200).json({
         success: true,
@@ -51,6 +48,7 @@ export const getAllJobs = async (
     });
   }
 };
+
 export const getJob = async (
   req: Request,
   res: Response,
@@ -79,6 +77,7 @@ export const getJob = async (
         company: {
           select: { id: true, name: true, industry: true, website: true },
         },
+        applications: true
       },
     });
 
@@ -99,21 +98,22 @@ export const getJob = async (
     });
   }
 };
+
 export const createJob = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const company = req.user;
-    if (!company) {
+    const user = req.user;
+    if (!user) {
       return res.status(400).json({
         success: false,
-        message: "company doesn't exists",
+        message: "Company doesn't exists",
       });
     }
 
-    if (company.role !== "COMPANY" || !company.verifiedProfile) {
+    if (user.role !== "COMPANY" || !user.verifiedProfile) {
       return res.status(401).json({
         success: false,
         message: "Insufficient privileges",
@@ -162,7 +162,7 @@ export const createJob = async (
         yearCutOff,
         deadline: new Date(deadline),
         status: JobStatus.ACTIVE,
-        companyId: company.id,
+        companyId: user.id,
       },
     });
 
@@ -179,6 +179,7 @@ export const createJob = async (
     });
   }
 };
+
 export const updateJob = async (
   req: Request,
   res: Response,
@@ -268,6 +269,7 @@ export const updateJob = async (
     });
   }
 };
+
 export const removeJob = async (
   req: Request,
   res: Response,
@@ -280,7 +282,7 @@ export const removeJob = async (
     if (!user || user.role !== "COMPANY" || !user.verifiedProfile) {
       return res
         .status(403)
-        .json({ success: false, message: "Only verified companies can close jobs" });
+        .json({ success: false, message: "Only verified companies can remove job" });
     }
 
     const job = await prisma.job.findUnique({
@@ -334,23 +336,12 @@ export const applyJob = async (
         id: jobId,
       },
     });
+    console.log("job in apply: ", job);
     if (!job) {
       return res.status(400).json({
         success: false,
         message: "Job not found",
       });
-    }
-
-    // Eligibility checks
-    const branchAllowed = job.branchCutOff.includes(user.branch!);
-    const yearAllowed = job.yearCutOff.includes(user.year!);
-    const cgpaAllowed =
-      user.cgpa && Number(user.cgpa) >= Number(job.cgpaCutOff);
-
-    if (!branchAllowed || !yearAllowed || !cgpaAllowed) {
-      return res
-        .status(400)
-        .json({ success: false, message: "You are not eligible for this job" });
     }
 
     const studentId = user.id;
@@ -367,6 +358,18 @@ export const applyJob = async (
       return res
         .status(400)
         .json({ success: false, message: "Already applied for this job" });
+    }
+
+    // Eligibility checks
+    const branchAllowed = job.branchCutOff.includes(user.branch!);
+    const yearAllowed = job.yearCutOff.includes(user.year!);
+    const cgpaAllowed =
+      user.cgpa && Number(user.cgpa) >= Number(job.cgpaCutOff);
+
+    if (!branchAllowed || !yearAllowed || !cgpaAllowed) {
+      return res
+        .status(400)
+        .json({ success: false, message: "You are not eligible for this job" });
     }
 
     const newApplication = await prisma.application.create({
@@ -396,12 +399,12 @@ export const shortlistedStudents = async (
     const user = req.user;
     const jobId = req.params.id;
 
-    if (!user || user.role !== "COMPANY") {
+    if (!user || user.role === "STUDENT") {
       return res
         .status(403)
         .json({
           success: false,
-          message: "Only companies can view shortlisted students",
+          message: "Only companies and coordinators can view shortlisted students",
         });
     }
 
@@ -472,6 +475,12 @@ export const getCompanyJobs = async (
       return res
         .status(404)
         .json({ success: false, message: "company is not found" });
+    }
+    if (company.jobs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "company jobs are not found"
+      });
     }
 
     res.status(200).json({

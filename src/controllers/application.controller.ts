@@ -10,7 +10,7 @@ export const jobApplication = async (
 ) => {
   try {
     const user = req.user;
-    const applicationId = req.params.id;
+    const jobId = req.params.id;
 
     if (!user) {
       return res.status(400).json({
@@ -19,48 +19,15 @@ export const jobApplication = async (
       });
     }
 
-    const application = await prisma.application.findFirst({
+    const application = await prisma.application.findUnique({
       where: {
-        id: applicationId,
-      },
-      include: {
-        job: {
-          include: {
-            type: true,
-            title: true,
-            position: true,
-            location: true,
-            salary: true,
-            cgpaCutOff: true,
-            branchCutOff: true,
-            yearCutOff: true,
-            deadline: true,
-            status: true,
-            company: {
-              select: {
-                id: true,
-                name: true,
-                website: true,
-              },
-            },
-          },
-        },
-        student: {
-          select: {
-            name: true,
-            email: true,
-            phone: true,
-            branch: true,
-            year: true,
-            cgpa: true,
-            resumeUrl: true,
-            linkedinUrl: true,
-            activeBacklog: true,
-            backlogs: true,
-          },
-        },
-      },
-    });
+        jobId_studentId: {
+          jobId: jobId,
+          studentId: user.id
+        }
+      }
+    })
+
     if (!application) {
       return res.status(400).json({
         success: false,
@@ -227,7 +194,6 @@ export const getAllJobApplications = async (
         },
       },
     });
-    console.log("Job: ", job);
     if (!job) {
       return res
         .status(404)
