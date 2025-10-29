@@ -31,7 +31,7 @@ export const getUsersForVerification = async (
     if (!profiles) {
       return res
         .status(404)
-        .json({ success: false, message: "Profiles are not found" });
+        .json({ success: false, message: "Pending users are not found" });
     }
 
     res.status(200).json({
@@ -55,6 +55,7 @@ export const verifyUser = async (
 ) => {
   try {
     const user = req.user;
+    const verificationUserId = req.params.id;
 
     if (!user || user.role !== "COORDINATOR") {
       return res.status(403).json({
@@ -63,16 +64,13 @@ export const verifyUser = async (
       });
     }
 
-    const profiles = await prisma.user.findMany({
+    const verificationUserProfile = await prisma.user.findUnique({
       where: {
-        verificationStatus: "PENDING",
-        NOT: {
-          role: "COORDINATOR",
-        },
+        id: verificationUserId
       },
     });
     console.log("profile Details: ", profiles);
-    if (!profiles) {
+    if (!verificationUserProfile) {
       return res
         .status(404)
         .json({ success: false, message: "Profiles are not found" });

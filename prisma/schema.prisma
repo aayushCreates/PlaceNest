@@ -79,6 +79,8 @@ model User {
   password    String
   role        Role
   linkedinUrl String
+  isPlaced    Boolean?
+  placedCompany String?
 
   // Common verification
   verificationStatus VerificationStatus @default(PENDING)
