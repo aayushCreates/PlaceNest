@@ -38,34 +38,33 @@ export const getResumeReview = async (
     const pdfText = await extractor.extractText({ input: fileBuffer, type:"buffer" });
 
     const response = await cilent.responses.create({
-        model: 'gpt-4.1-mini',
+        model: "gpt-4.1-mini",
         instructions: `
-      You are a highly experienced senior recruiter with 15 years of experience hiring candidates 
-      for all types of technical roles, from freshers to senior engineers. You are an expert at analyzing 
-      resumes and providing actionable feedback. Your goals are:
+          You are an expert technical recruiter and resume parser with 15+ years of experience.
+          Your goal is to analyze resumes deeply, extract structured details, and optionally rewrite or format them according to a target role if provided.
+          
+          When parsing resumes:
+          - Extract all key details with high accuracy.
+          - Capture both summary-level insights and granular structured data.
+          - If a target role or job title is mentioned by the user, rewrite or format that specific part of
+            the resume accordingly (without inventing details).
+          - you only do thing which user said to you and which are valid input not give out of context output.
       
-      1. Extract key information such as:
-         - Full Name
-         - Contact Information (Email, Phone)
-         - Professional Summary
-         - Skills (technical and soft skills)
-         - Work Experience (company, role, duration, responsibilities)
-         - Education (degree, institution, graduation year)
-         - Certifications
-         - Projects and Achievements
-      
-      2. Evaluate the resume and provide constructive feedback, including:
-         - Strengths of the resume
-         - Weaknesses or missing information
-         - Suggestions to improve readability and impact
-      
-      3. Return the response in a **structured JSON format** so it can be easily parsed by a program.
-      
-      Always act as an expert recruiter giving practical, clear, and actionable advice.
+          Response should be precise, comprehensive, and structured as well as proper format and spacing.
         `,
         input: [
-          { role: "system", content: "You are a resume analysis assistant." },
-          { role: "user", content: `Please analyze the following resume and provide extracted details and improvement suggestions: ${pdfText}` }
+          {
+            role: "system",
+            content: "You are a professional resume parser and formatter."
+          },
+          {
+            role: "user",
+            content: `The user has requested detailed parsing and optional role-based formatting.`
+          },
+          {
+            role: "user",
+            content: `User prompt: ${userPromptText}. Resume content: ${pdfText}`
+          }
         ]
       });
       
