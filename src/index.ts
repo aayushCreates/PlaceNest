@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { errorMiddleware } from "./middlewares/error.middleware";
 import authRouter from "./routes/auth.routes";
 import profileRouter from "./routes/profile.routes";
 import jobRouter from "./routes/job.routes";
@@ -32,8 +31,6 @@ app.use('/resume-review', resumeReviewRoute);
 app.get("/ping", (req: Request, res: Response, next: NextFunction) => {
   res.send("hello world");
 });
-
-app.use(errorMiddleware);
 
 const port = process.env.PORT || 5050;
 app.listen(port, () => {

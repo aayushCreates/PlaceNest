@@ -1,4 +1,4 @@
-import { JobStatus, VerificationStatus } from "@/generated/prisma";
+import { JobStatus } from "@/generated/prisma";
 import { PrismaClient } from "../generated/prisma";
 import { Request, Response, NextFunction } from "express";
 

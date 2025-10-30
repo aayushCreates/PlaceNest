@@ -1,6 +1,7 @@
 
 
 export default interface UserType {
+    id: String
     firstName: string
     lastName: string
     email: string
@@ -10,7 +11,8 @@ export default interface UserType {
     year?: string
     cgpa?: Float16Array
     active_backlog: number
-    isVerified: boolean
+    role: "STUDENT" | "COMPANY" | "COORDINATOR"
+    verifiedProfile: boolean
     resumeUrl?: string
     // profileCompleted
 }

@@ -1,0 +1,9 @@
+import UserType from "../UserTypes";
+
+declare global {
+  namespace Express {
+    export interface Request {
+      user?: any; 
+    }
+  }
+}

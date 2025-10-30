@@ -7,7 +7,6 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const error_middleware_1 = require("./middlewares/error.middleware");
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const profile_routes_1 = __importDefault(require("./routes/profile.routes"));
 const job_routes_1 = __importDefault(require("./routes/job.routes"));
@@ -30,7 +29,6 @@ app.use('/resume-review', reumeReview_routes_1.default);
 app.get("/ping", (req, res, next) => {
     res.send("hello world");
 });
-app.use(error_middleware_1.errorMiddleware);
 const port = process.env.PORT || 5050;
 app.listen(port, () => {
     console.log("✅ server is running on port: " + port);
