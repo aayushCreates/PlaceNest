@@ -22,7 +22,7 @@ enum ApplicationStatus {
 }
 
 enum Branch {
-  CS
+  CSE
   CY
   IT
   ME

@@ -69,7 +69,7 @@ export const verifyUser = async (
         id: verificationUserId
       },
     });
-    console.log("profile Details: ", profiles);
+    console.log("profile Details: ", verificationUserProfile);
     if (!verificationUserProfile) {
       return res
         .status(404)
@@ -79,7 +79,7 @@ export const verifyUser = async (
     res.status(200).json({
       success: true,
       message: `Profiles fetched successfully`,
-      data: profiles,
+      data: verificationUserProfile,
     });
   } catch (err) {
     console.error("Error in verifying user profile:", err);
