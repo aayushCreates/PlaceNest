@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const application_controller_1 = require("@/controllers/application.controller");
+const auth_middleware_1 = require("@/middlewares/auth.middleware");
+const express_1 = require("express");
+const applicationRouter = (0, express_1.Router)();
+applicationRouter.get("/", auth_middleware_1.isUserLoggedIn, application_controller_1.getStudentApplications);
+applicationRouter.get("/:id", auth_middleware_1.isUserLoggedIn, application_controller_1.jobApplication);
+applicationRouter.patch("/:id/status", auth_middleware_1.isUserLoggedIn, application_controller_1.updateApplicationStatus);
+applicationRouter.get("/job/:companyId", auth_middleware_1.isUserLoggedIn, application_controller_1.getAllJobApplications);
+exports.default = applicationRouter;

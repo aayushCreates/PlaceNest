@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const profile_controller_1 = require("../controllers/profile.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const profileRouter = (0, express_1.Router)();
+profileRouter.get('/', auth_middleware_1.isUserLoggedIn, profile_controller_1.getProfile);
+profileRouter.put('/', auth_middleware_1.isUserLoggedIn, profile_controller_1.updateProfile);
+profileRouter.get('/:id', auth_middleware_1.isUserLoggedIn, profile_controller_1.getUserProfile);
+profileRouter.get('/students', auth_middleware_1.isUserLoggedIn, profile_controller_1.getAllStudents);
+profileRouter.get('/company', auth_middleware_1.isUserLoggedIn, profile_controller_1.getAllCompanies);
+profileRouter.get('/coordinators', auth_middleware_1.isUserLoggedIn, profile_controller_1.getAllCoordinators);
+profileRouter.put('/coordinator/user/:id/role', auth_middleware_1.isUserLoggedIn, profile_controller_1.promoteUserToCoordinator);
+profileRouter.get('/status/dashboard', auth_middleware_1.isUserLoggedIn, profile_controller_1.dasboard);
+exports.default = profileRouter;
