@@ -9,6 +9,7 @@ import profileRouter from "./routes/profile.routes";
 import jobRouter from "./routes/job.routes";
 import applicationRouter from "./routes/application.routes";
 import verficationRoutes from "./routes/verifiation.routes";
+import resumeReviewRoute from "./routes/reumeReview.routes";
 
 const app = express();
 dotenv.config();
@@ -26,6 +27,7 @@ app.use("/profile", profileRouter);
 app.use("/job", jobRouter);
 app.use("/application", applicationRouter);
 app.use("/verification", verficationRoutes);
+app.use('/resume-review', resumeReviewRoute);
 
 app.get("/ping", (req: Request, res: Response, next: NextFunction) => {
   res.send("hello world");
