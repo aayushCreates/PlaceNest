@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyUser = exports.getUsersForVerification = void 0;
 const prisma_1 = require("@/generated/prisma");
-const prisma_2 = require("../generated/prisma");
-const prisma = new prisma_2.PrismaClient();
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
 const getUsersForVerification = async (req, res, next) => {
     try {
         const user = req.user;

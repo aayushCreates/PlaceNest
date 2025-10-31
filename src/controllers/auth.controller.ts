@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { checkValidUserByPassword, getJWT } from "../middlewares/auth.middleware";
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "../generated/prisma";
+import { PrismaClient } from '@prisma/client';
 
 const cookieOptions = {
   maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days

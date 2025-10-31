@@ -5,9 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.dasboard = exports.promoteUserToCoordinator = exports.getUserProfile = exports.getAllCoordinators = exports.getAllCompanies = exports.getAllStudents = exports.updateProfile = exports.getProfile = void 0;
 const error_utils_1 = __importDefault(require("../utils/error.utils"));
-const prisma_1 = require("../generated/prisma");
-const prisma_2 = require("@/generated/prisma");
-const prisma = new prisma_1.PrismaClient();
+const client_1 = require("@prisma/client");
+const prisma_1 = require("@/generated/prisma");
+const prisma = new client_1.PrismaClient();
 const getProfile = async (req, res, next) => {
     try {
         const user = req.user;
@@ -76,7 +76,7 @@ const updateProfile = async (req, res, next) => {
                 linkedinUrl: linkedinUrl ?? user.linkedinUrl,
                 location: location ?? user.location,
                 description: description ?? user.description,
-                verificationStatus: prisma_2.VerificationStatus.PENDING,
+                verificationStatus: prisma_1.VerificationStatus.PENDING,
                 verifiedProfile: false,
             };
             resetVerification = true;
@@ -94,7 +94,7 @@ const updateProfile = async (req, res, next) => {
                 website: website ?? user.website,
                 founded: founded ?? user.founded,
                 location: location ?? user.location,
-                verificationStatus: prisma_2.VerificationStatus.PENDING,
+                verificationStatus: prisma_1.VerificationStatus.PENDING,
                 verifiedProfile: false,
             };
             resetVerification = true;
@@ -327,18 +327,18 @@ const dasboard = async (req, res, next) => {
         const totalVerifiedStudents = await prisma.user.findMany({
             where: {
                 verifiedProfile: true,
-                role: prisma_2.Role.STUDENT
+                role: prisma_1.Role.STUDENT
             }
         });
         const totalVerifiedCompanies = await prisma.user.findMany({
             where: {
                 verifiedProfile: true,
-                role: prisma_2.Role.COMPANY
+                role: prisma_1.Role.COMPANY
             }
         });
         const activeJobs = await prisma.job.findMany({
             where: {
-                status: prisma_2.JobStatus.ACTIVE
+                status: prisma_1.JobStatus.ACTIVE
             }
         });
         res.status(200).json({

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import AppError from "../utils/error.utils";
-import { PrismaClient } from "../generated/prisma";
+import { PrismaClient } from '@prisma/client';
 import { JobStatus, Role, VerificationStatus } from "@/generated/prisma";
 
 const prisma = new PrismaClient();

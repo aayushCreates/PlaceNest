@@ -7,8 +7,8 @@ exports.checkValidUserByPassword = exports.getJWT = exports.isUserLoggedIn = voi
 const error_utils_1 = __importDefault(require("../utils/error.utils"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const prisma_1 = require("../generated/prisma");
-const prisma = new prisma_1.PrismaClient();
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) {
     console.log("JWT secret is not found");
@@ -31,6 +31,7 @@ const isUserLoggedIn = async (req, res, next) => {
             return next(new error_utils_1.default("Invalid token, please login again", 400));
         }
         const userId = decoded.userId;
+        console.log("userid: ", userId);
         const user = await prisma.user.findUnique({
             where: { id: userId }
         });

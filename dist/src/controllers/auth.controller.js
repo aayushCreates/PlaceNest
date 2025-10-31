@@ -6,13 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.logout = exports.login = exports.register = void 0;
 const auth_middleware_1 = require("../middlewares/auth.middleware");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const prisma_1 = require("../generated/prisma");
+const client_1 = require("@prisma/client");
 const cookieOptions = {
     maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
 };
-const prisma = new prisma_1.PrismaClient();
+const prisma = new client_1.PrismaClient();
 const register = async (req, res, next) => {
     try {
         const { name, email, phone, password, role, branch, year, cgpa, backlogs, activeBacklogs, industry, companyDescription, website, foundedYear, location, linkedinUrl, resumeUrl, } = req.body;

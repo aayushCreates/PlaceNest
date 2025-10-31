@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllJobApplications = exports.updateApplicationStatus = exports.getStudentApplications = exports.jobApplication = void 0;
-const prisma_1 = require("../generated/prisma");
-const prisma = new prisma_1.PrismaClient();
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
 const jobApplication = async (req, res, next) => {
     try {
         const user = req.user;
