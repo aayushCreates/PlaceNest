@@ -64,13 +64,16 @@ export const getStudentApplications = async (
 
     const studentApplications = await prisma.application.findMany({
       where: {
-        id: user.id,
+        studentId: user.id,
       },
       include: {
-        job: true,
+        job: {
+          include: {
+            company: true
+          }
+        }
       },
     });
-    console.log("student applications: ", studentApplications);
     if (studentApplications.length === 0) {
       return res
         .status(200)

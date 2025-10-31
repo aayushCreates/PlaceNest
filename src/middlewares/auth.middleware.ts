@@ -33,13 +33,10 @@ export const isUserLoggedIn = async (req: Request, res: Response, next: NextFunc
 
         const userId = decoded.userId;
 
-        console.log("userid: ", userId);
-
         const user = await prisma.user.findUnique({
             where: { id: userId }
         })
         req.user = user;
-
         next();
 
     }catch(err){

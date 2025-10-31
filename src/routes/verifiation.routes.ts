@@ -7,7 +7,7 @@ const verficationRoutes = Router();
 
 verficationRoutes.get('/', isUserLoggedIn, getUsersForVerification);
 
-verficationRoutes.put('/student/:id', isUserLoggedIn, verifyUser);
+verficationRoutes.put('/:id', isUserLoggedIn, verifyUser);
 
 
 

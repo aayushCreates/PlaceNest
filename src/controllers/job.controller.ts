@@ -1,5 +1,5 @@
-import { JobStatus } from "@/generated/prisma";
-import { PrismaClient } from '@prisma/client';
+import { Branch, JobStatus, JobType, Year } from "@/generated/prisma";
+import { PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 
 const prisma = new PrismaClient();
@@ -20,7 +20,7 @@ export const getAllJobs = async (
 
     const jobs = await prisma.job.findMany({
       where: {
-        status: "ACTIVE"
+        status: "ACTIVE",
       },
       include: {
         company: {
@@ -77,7 +77,7 @@ export const getJob = async (
         company: {
           select: { id: true, name: true, industry: true, website: true },
         },
-        applications: true
+        applications: true,
       },
     });
 
@@ -149,17 +149,54 @@ export const createJob = async (
       });
     }
 
+    const jobTypeEnum =
+      type !== "FullTime"
+        ? type !== "Internship"
+          ? type === "Contract"
+            ? JobType.Contract
+            : JobType.PartTime
+          : JobType.Internship
+        : JobType.FullTime;
+
+    const branchCutOffEnum = (branchCutOff as string[]).map((b) =>
+      b !== "CSE"
+        ? b !== "CY"
+          ? b !== "IT"
+            ? b !== "ME"
+              ? b !== "ECE"
+                ? b !== "EIC"
+                  ? b !== "EE"
+                    ? Branch.CE
+                    : Branch.EE
+                  : Branch.EIC
+                : Branch.ECE
+              : Branch.ME
+            : Branch.IT
+          : Branch.CY
+        : Branch.CSE
+    );
+
+    const yearCutOffEnum = (yearCutOff as string[]).map((y) =>
+      y !== "FIRST"
+        ? y !== "SECOND"
+          ? y !== "THIRD"
+            ? Year.FOURTH
+            : Year.THIRD
+          : Year.SECOND
+        : Year.FIRST
+    );
+
     const newJob = await prisma.job.create({
       data: {
-        type,
+        type: jobTypeEnum,
         title,
         description,
         position,
         location,
-        salary,
-        cgpaCutOff,
-        branchCutOff,
-        yearCutOff,
+        salary: salary.toString(),
+        cgpaCutOff: cgpaCutOff,
+        branchCutOff: branchCutOffEnum,
+        yearCutOff: yearCutOffEnum,
         deadline: new Date(deadline),
         status: JobStatus.ACTIVE,
         companyId: user.id,
@@ -167,7 +204,7 @@ export const createJob = async (
     });
 
     res.status(200).json({
-      success: false,
+      success: true,
       message: "Job created successfully",
       data: newJob,
     });
@@ -280,9 +317,10 @@ export const removeJob = async (
     const jobId = req.params.id;
 
     if (!user || user.role !== "COMPANY" || !user.verifiedProfile) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Only verified companies can remove job" });
+      return res.status(403).json({
+        success: false,
+        message: "Only verified companies can remove job",
+      });
     }
 
     const job = await prisma.job.findUnique({
@@ -336,7 +374,6 @@ export const applyJob = async (
         id: jobId,
       },
     });
-    console.log("job in apply: ", job);
     if (!job) {
       return res.status(400).json({
         success: false,
@@ -400,12 +437,11 @@ export const shortlistedStudents = async (
     const jobId = req.params.id;
 
     if (!user || user.role === "STUDENT") {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Only companies and coordinators can view shortlisted students",
-        });
+      return res.status(403).json({
+        success: false,
+        message:
+          "Only companies and coordinators can view shortlisted students",
+      });
     }
 
     const totalShortlistedApplications = await prisma.application.findMany({
@@ -426,13 +462,11 @@ export const shortlistedStudents = async (
       },
     });
     if (totalShortlistedApplications.length === 0) {
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "No shortlisted students yet",
-          data: [],
-        });
+      return res.status(200).json({
+        success: true,
+        message: "No shortlisted students yet",
+        data: [],
+      });
     }
 
     res.status(200).json({
@@ -479,7 +513,7 @@ export const getCompanyJobs = async (
     if (company.jobs.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "company jobs are not found"
+        message: "company jobs are not found",
       });
     }
 

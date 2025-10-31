@@ -22,13 +22,13 @@ export const getUsersForVerification = async (
     const profiles = await prisma.user.findMany({
       where: {
         verificationStatus: "PENDING",
-        NOT: {
-          role: "COORDINATOR",
-        },
+        verifiedProfile: false
       },
     });
-    console.log("profile Details: ", profiles);
-    if (!profiles) {
+
+    console.log("profile not verified: ", profiles);
+
+    if (profiles.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "Pending users are not found" });
@@ -48,51 +48,10 @@ export const getUsersForVerification = async (
   }
 };
 
-export const verifyUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const verifyUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    const verificationUserId = req.params.id;
-
-    if (!user || user.role !== "COORDINATOR") {
-      return res.status(403).json({
-        success: false,
-        message: "Only coordinator can verify profile",
-      });
-    }
-
-    const verificationUserProfile = await prisma.user.findUnique({
-      where: {
-        id: verificationUserId
-      },
-    });
-    console.log("profile Details: ", verificationUserProfile);
-    if (!verificationUserProfile) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Profiles are not found" });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: `Profiles fetched successfully`,
-      data: verificationUserProfile,
-    });
-  } catch (err) {
-    console.error("Error in verifying user profile:", err);
-    res.status(500).json({
-      success: false,
-      message: "Error in verifying user profile",
-    });
-  }
-};
-async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const user = req.user;
-    const profileId = req.params.id;
+    const verificationProfileId = req.params.id;
     const { status } = req.body;
     if (!user || user.role !== "COORDINATOR") {
       return res
@@ -109,32 +68,24 @@ async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    console.log("profileId: ", req.params.id);
-
-    const profileDetails = await prisma.user.findUnique({
+    const verificationProfileDetails = await prisma.user.findUnique({
       where: {
-        id: profileId,
+        id: verificationProfileId,
       },
     });
-    console.log("profile Details: ", profileDetails);
-    if (!profileDetails) {
+    console.log("profile Details: ", verificationProfileDetails);
+    if (!verificationProfileDetails) {
       return res
         .status(404)
         .json({ success: false, message: "Profile not found" });
     }
-    if (profileDetails.role === "COORDINATOR") {
-      return res.status(400).json({
-        success: false,
-        message: "Coordinator profiles cannot be verified.",
-      });
-    }
 
-    const updateProfile = await prisma.user.update({
+    const updatedProfile = await prisma.user.update({
       where: {
-        id: profileId,
+        id: verificationProfileId,
       },
       data: {
-        verifiedProfile: status === "APPROVED",
+        verifiedProfile: status === "APPROVED" ? true : false,
         verificationStatus:
           status === "APPROVED"
             ? VerificationStatus.APPROVED
@@ -142,11 +93,11 @@ async (req: Request, res: Response, next: NextFunction) => {
       },
     });
 
-    console.log("update profile: ", updateProfile);
+    console.log("update profile: ", updatedProfile);
 
     const verificationEntry = await prisma.verification.create({
       data: {
-        userId: profileId,
+        userId: verificationProfileId,
         verifiedById: user.id,
         status:
           status === "APPROVED"
@@ -161,7 +112,7 @@ async (req: Request, res: Response, next: NextFunction) => {
     res.status(200).json({
       success: true,
       message: `Profile ${status.toLowerCase()} successfully`,
-      data: updateProfile,
+      data: updatedProfile,
     });
   } catch (err) {
     console.error("Error in verifying user profile:", err);
