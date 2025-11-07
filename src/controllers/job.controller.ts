@@ -501,7 +501,11 @@ export const getCompanyJobs = async (
         id: companyId,
       },
       include: {
-        jobs: true,
+        jobs: {
+          include: {
+            applications: true
+          }
+        },
       },
     });
 

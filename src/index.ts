@@ -9,13 +9,16 @@ import jobRouter from "./routes/job.routes";
 import applicationRouter from "./routes/application.routes";
 import verficationRoutes from "./routes/verifiation.routes";
 import resumeReviewRoute from "./routes/reumeReview.routes";
+import morgan from 'morgan';
 
 const app = express();
 dotenv.config();
 
+app.use(morgan('dev'));
+
 app.use(
   cors({
-    origin: ["http://localhost:3030"],
+    origin: ["http://localhost:5173"],
   })
 );
 app.use(express.json());
