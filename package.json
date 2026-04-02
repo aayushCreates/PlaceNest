@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/creativeArchitect/PlaceNest#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.17.0",
     "@types/cookie-parser": "^1.4.9",
     "bcrypt": "^6.0.0",

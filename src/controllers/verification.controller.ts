@@ -43,7 +43,7 @@ export const getUsersForVerification = async (
     console.error("Error in verifying user profile:", err);
     res.status(500).json({
       success: false,
-      message: "Error in verifgying user profile",
+      message: "Error in verifying user profile",
     });
   }
 };

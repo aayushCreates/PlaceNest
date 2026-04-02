@@ -105,8 +105,8 @@ export const updateApplicationStatus = async (
 ) => {
   try {
     const user = req.user;
-    const jobId = req.params.id;
-    const { studentId, status } = req.body;
+    const applicationId = req.params.id;
+    const { status } = req.body;
 
     if (!user || user.role !== "COMPANY") {
       return res
@@ -114,55 +114,44 @@ export const updateApplicationStatus = async (
         .json({ success: false, message: "Only companies can update status" });
     }
 
-    if(!user.verifiedProfile){
-      return res.status(404).json({
+    if (!user.verifiedProfile) {
+      return res.status(403).json({
         success: false,
-        message: "Your profile is not verified"
-      })
-    }
-
-    const jobDetails = await prisma.job.findFirst({
-      where: {
-        id: jobId,
-      },
-    });
-    if (!jobDetails) {
-      return res.status(404).json({
-        success: true,
-        message: "Job not found",
+        message: "Your profile is not verified",
       });
     }
 
-    const studentApplication = await prisma.application.findUnique({
-      where: {
-        jobId_studentId: {
-          jobId,
-          studentId,
-        },
-      },
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { job: true },
     });
-    if (!studentApplication) {
+
+    if (!application) {
       return res
         .status(404)
         .json({ success: false, message: "Application not found" });
     }
 
-    const updateStudentApplication = await prisma.application.update({
-      where: {
-        id: studentApplication.id,
-      },
-      data: {
-        status: status,
-      },
+    // Verify the company owns this job
+    if (application.job.companyId !== user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to update this application",
+      });
+    }
+
+    const updatedApplication = await prisma.application.update({
+      where: { id: applicationId },
+      data: { status },
     });
 
     res.status(200).json({
       success: true,
       message: "Application status updated successfully",
-      data: updateStudentApplication,
+      data: updatedApplication,
     });
   } catch (err) {
-    console.log("Error updating status" + err);
+    console.error("Error updating status:", err);
     res.status(500).json({ success: false, message: "Error updating status" });
   }
 };

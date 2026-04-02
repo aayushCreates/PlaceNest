@@ -374,6 +374,9 @@ export const applyJob = async (
         id: jobId,
       },
     });
+
+    console.log("jobs: ", job);
+
     if (!job) {
       return res.status(400).json({
         success: false,
@@ -503,7 +506,21 @@ export const getCompanyJobs = async (
       include: {
         jobs: {
           include: {
-            applications: true
+            applications: {
+              include: {
+                student: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    branch: true,
+                    year: true,
+                    cgpa: true,
+                    resumeUrl: true,
+                  }
+                }
+              }
+            }
           }
         },
       },

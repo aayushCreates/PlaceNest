@@ -25,6 +25,12 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
             verifiedBy: { select: { id: true, name: true, email: true, role: true } },
           },
         },
+        applications: {
+          select: {
+            jobId: true,
+            status: true,
+          }
+        },
       },
     });
 
@@ -360,7 +366,7 @@ export const promoteUserToCoordinator = async (req: Request, res: Response, next
   }
 }
 
-export const dasboard = async (req: Request, res: Response, next: NextFunction) => {
+export const dashboard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user || user.role !== "COORDINATOR") {
